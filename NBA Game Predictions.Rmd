@@ -60,6 +60,10 @@ stan_data <- list(
                   )
 ```
 
+```{r quick exploration of the data}
+
+```
+
 
 ```{r compile and fit base Stan model, include = FALSE}
 stan_model_base_comp <- stan_model(file = "Stan_models/NBA_base_model_normal.stan")

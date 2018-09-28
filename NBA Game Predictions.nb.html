@@ -180,37 +180,18 @@ $(document).ready(function () {
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ2FtZV9kYXRhIDwtIHJlYWRfY3N2KFwiTkJBIEdhbWUgRGF0YSAyMDE2MjAxNy5jc3ZcIilcbmBgYCJ9 -->
-<pre class="r"><code>game_data &lt;- read_csv(&quot;NBA Game Data 20162017.csv&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUGFyc2VkIHdpdGggY29sdW1uIHNwZWNpZmljYXRpb246XG5jb2xzKFxuICBEYXRlID0gY29sX2NoYXJhY3RlcigpLFxuICBgU3RhcnQgKEVUKWAgPSBjb2xfdGltZShmb3JtYXQgPSBcIlwiKSxcbiAgYFZpc2l0b3IvTmV1dHJhbGAgPSBjb2xfY2hhcmFjdGVyKCksXG4gIFBUU19BID0gY29sX2ludGVnZXIoKSxcbiAgYEhvbWUvTmV1dHJhbGAgPSBjb2xfY2hhcmFjdGVyKCksXG4gIFBUU19IID0gY29sX2ludGVnZXIoKSxcbiAgTGluayA9IGNvbF9jaGFyYWN0ZXIoKSxcbiAgT1QgPSBjb2xfY2hhcmFjdGVyKCksXG4gIE5vdGVzID0gY29sX2NoYXJhY3RlcigpXG4pXG4ifQ== -->
-<pre><code>Parsed with column specification:
-cols(
-  Date = col_character(),
-  `Start (ET)` = col_time(format = &quot;&quot;),
-  `Visitor/Neutral` = col_character(),
-  PTS_A = col_integer(),
-  `Home/Neutral` = col_character(),
-  PTS_H = col_integer(),
-  Link = col_character(),
-  OT = col_character(),
-  Notes = col_character()
-)</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ2FtZV9kYXRhIDwtIGdhbWVfZGF0YSAlPiUgXG4gICAgICAgICAgICAgICAgc2VsZWN0KGRhdGUgPSBEYXRlLCBhd2F5X3RlYW0gPSBcIlZpc2l0b3IvTmV1dHJhbFwiLCBob21lX3RlYW0gPSBcIkhvbWUvTmV1dHJhbFwiLCBwdHNfYXdheSA9IFBUU19BLCBwdHNfaG9tZSA9IFBUU19ILCBvdmVydGltZSA9IE9UKSAlPiVcbiAgICAgICAgICAgICAgICBtdXRhdGUoc2NvcmVfZGlmZiA9IHB0c19hd2F5IC0gcHRzX2hvbWUsXG4gICAgICAgICAgICAgICAgICAgICAgIG92ZXJ0aW1lID0gaWZlbHNlIChpcy5uYShvdmVydGltZSksIDAsIFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaWZlbHNlKHN0cmluZ3I6OnN0cl9sZW5ndGgob3ZlcnRpbWUpID09IDIsIDEsIGFzLmludGVnZXIoc3Vic3RyaW5nKG92ZXJ0aW1lLCAxLCAxKSkpKSlcbmBgYCJ9 -->
-<pre class="r"><code>game_data &lt;- game_data %&gt;% 
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ2FtZV9kYXRhIDwtIHJlYWRfY3N2KFwiTkJBIEdhbWUgRGF0YSAyMDE2MjAxNy5jc3ZcIilcbmdhbWVfZGF0YSA8LSBnYW1lX2RhdGEgJT4lIFxuICAgICAgICAgICAgICAgIHNlbGVjdChkYXRlID0gRGF0ZSwgYXdheV90ZWFtID0gXCJWaXNpdG9yL05ldXRyYWxcIiwgaG9tZV90ZWFtID0gXCJIb21lL05ldXRyYWxcIiwgcHRzX2F3YXkgPSBQVFNfQSwgcHRzX2hvbWUgPSBQVFNfSCwgb3ZlcnRpbWUgPSBPVCkgJT4lXG4gICAgICAgICAgICAgICAgbXV0YXRlKHNjb3JlX2RpZmYgPSBwdHNfYXdheSAtIHB0c19ob21lLFxuICAgICAgICAgICAgICAgICAgICAgICBvdmVydGltZSA9IGlmZWxzZSAoaXMubmEob3ZlcnRpbWUpLCAwLCBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmZWxzZShzdHJpbmdyOjpzdHJfbGVuZ3RoKG92ZXJ0aW1lKSA9PSAyLCAxLCBhcy5pbnRlZ2VyKHN1YnN0cmluZyhvdmVydGltZSwgMSwgMSkpKSkpXG5cbiMgY3JlYXRlIGEgc2luZ2xlIGlkZW50aWZpZXIgdXNlZCBmb3IgYm90aCBhd2F5IGFuZCBob21lIHRlYW1zXG51bmlxdWVfdGVhbXMgPC0gc29ydCh1bmlxdWUoYyhnYW1lX2RhdGEkYXdheV90ZWFtLCBnYW1lX2RhdGEkaG9tZV90ZWFtKSkpXG50ZWFtX21hcHBpbmdfdGFibGUgPC0gdGliYmxlKHRlYW1fbmFtZSA9IHVuaXF1ZV90ZWFtcywgdGVhbV9pZCA9IDE6bGVuZ3RoKHVuaXF1ZV90ZWFtcykpXG5cbmxvb2t1cF90ZWFtX2lkIDwtIGZ1bmN0aW9uKHRlYW1fbmFtZV9sb29rdXAsIG1hcHBpbmdfdGFibGUpIHtcbiAgdG1wX3RhYmxlIDwtIGZpbHRlcihtYXBwaW5nX3RhYmxlLCB0ZWFtX25hbWUgPT0gdGVhbV9uYW1lX2xvb2t1cClcbiAgaWYgKG5yb3codG1wX3RhYmxlKSAhPSAxKSB7XG4gICAgc3RvcChwYXN0ZShcImxvb2t1cC1yb3dzIHNob3VsZCBiZSBlcXVhbCB0byBvbmUgYnV0IGZvdW5kXCIsIG5yb3codG1wX3RhYmxlKSwgXCJpbnN0ZWFkXCIpKVxuICB9XG4gIG91dCA8LSB0bXBfdGFibGUkdGVhbV9pZFxuICBvdXRcbn1cblxudGVhbV9pZCA8LSBtYXBfaW50KGMoZ2FtZV9kYXRhJGF3YXlfdGVhbSwgZ2FtZV9kYXRhJGhvbWVfdGVhbSksIGxvb2t1cF90ZWFtX2lkLCBtYXBwaW5nX3RhYmxlID0gdGVhbV9tYXBwaW5nX3RhYmxlKVxuTl9nYW1lcyA8LSBucm93KGdhbWVfZGF0YSlcbmdhbWVfZGF0YSA8LSBnYW1lX2RhdGEgJT4lIG11dGF0ZShhd2F5X3RlYW1faWQgPSB0ZWFtX2lkWzE6Tl9nYW1lc10sIGhvbWVfdGVhbV9pZCA9IHRlYW1faWRbKE5fZ2FtZXMgKyAxKTooMiAqIE5fZ2FtZXMpXSlcbk5fZ2FtZXNfcGVyX3RlYW0gPC0gODJcbm5fc2ltcyA8LSA0MDAwXG5cbmBgYCJ9 -->
+<pre class="r"><code>game_data &lt;- read_csv(&quot;NBA Game Data 20162017.csv&quot;)
+game_data &lt;- game_data %&gt;% 
                 select(date = Date, away_team = &quot;Visitor/Neutral&quot;, home_team = &quot;Home/Neutral&quot;, pts_away = PTS_A, pts_home = PTS_H, overtime = OT) %&gt;%
                 mutate(score_diff = pts_away - pts_home,
                        overtime = ifelse (is.na(overtime), 0, 
-                                          ifelse(stringr::str_length(overtime) == 2, 1, as.integer(substring(overtime, 1, 1)))))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTkFzIGludHJvZHVjZWQgYnkgY29lcmNpb25cbiJ9 -->
-<pre><code>NAs introduced by coercion</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBjcmVhdGUgYSBzaW5nbGUgaWRlbnRpZmllciB1c2VkIGZvciBib3RoIGF3YXkgYW5kIGhvbWUgdGVhbXNcbnVuaXF1ZV90ZWFtcyA8LSBzb3J0KHVuaXF1ZShjKGdhbWVfZGF0YSRhd2F5X3RlYW0sIGdhbWVfZGF0YSRob21lX3RlYW0pKSlcbnRlYW1fbWFwcGluZ190YWJsZSA8LSB0aWJibGUodGVhbV9uYW1lID0gdW5pcXVlX3RlYW1zLCB0ZWFtX2lkID0gMTpsZW5ndGgodW5pcXVlX3RlYW1zKSlcbmxvb2t1cF90ZWFtX2lkIDwtIGZ1bmN0aW9uKHRlYW1fbmFtZV9sb29rdXAsIG1hcHBpbmdfdGFibGUpIHtcbiAgdG1wX3RhYmxlIDwtIGZpbHRlcihtYXBwaW5nX3RhYmxlLCB0ZWFtX25hbWUgPT0gdGVhbV9uYW1lX2xvb2t1cClcbiAgaWYgKG5yb3codG1wX3RhYmxlKSAhPSAxKSB7XG4gICAgc3RvcChwYXN0ZShcImxvb2t1cC1yb3dzIHNob3VsZCBiZSBlcXVhbCB0byBvbmUgYnV0IGZvdW5kXCIsIG5yb3codG1wX3RhYmxlKSwgXCJpbnN0ZWFkXCIpKVxuICB9XG4gIG91dCA8LSB0bXBfdGFibGUkdGVhbV9pZFxuICBvdXRcbn1cbnRlYW1faWQgPC0gbWFwX2ludChjKGdhbWVfZGF0YSRhd2F5X3RlYW0sIGdhbWVfZGF0YSRob21lX3RlYW0pLCBsb29rdXBfdGVhbV9pZCwgbWFwcGluZ190YWJsZSA9IHRlYW1fbWFwcGluZ190YWJsZSlcbk5fZ2FtZXMgPC0gbnJvdyhnYW1lX2RhdGEpXG5nYW1lX2RhdGEgPC0gZ2FtZV9kYXRhICU+JSBtdXRhdGUoYXdheV90ZWFtX2lkID0gdGVhbV9pZFsxOk5fZ2FtZXNdLCBob21lX3RlYW1faWQgPSB0ZWFtX2lkWyhOX2dhbWVzICsgMSk6KDIgKiBOX2dhbWVzKV0pXG5OX2dhbWVzX3Blcl90ZWFtIDwtIDgyXG5uX3NpbXMgPC0gNDAwMFxuYGBgIn0= -->
-<pre class="r"><code># create a single identifier used for both away and home teams
+                                          ifelse(stringr::str_length(overtime) == 2, 1, as.integer(substring(overtime, 1, 1)))))
+
+# create a single identifier used for both away and home teams
 unique_teams &lt;- sort(unique(c(game_data$away_team, game_data$home_team)))
 team_mapping_table &lt;- tibble(team_name = unique_teams, team_id = 1:length(unique_teams))
+
 lookup_team_id &lt;- function(team_name_lookup, mapping_table) {
   tmp_table &lt;- filter(mapping_table, team_name == team_name_lookup)
   if (nrow(tmp_table) != 1) {
@@ -219,11 +200,13 @@ lookup_team_id &lt;- function(team_name_lookup, mapping_table) {
   out &lt;- tmp_table$team_id
   out
 }
+
 team_id &lt;- map_int(c(game_data$away_team, game_data$home_team), lookup_team_id, mapping_table = team_mapping_table)
 N_games &lt;- nrow(game_data)
 game_data &lt;- game_data %&gt;% mutate(away_team_id = team_id[1:N_games], home_team_id = team_id[(N_games + 1):(2 * N_games)])
 N_games_per_team &lt;- 82
-n_sims &lt;- 4000</code></pre>
+n_sims &lt;- 4000
+</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -244,55 +227,7 @@ n_sims &lt;- 4000</code></pre>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoc3Rhbl9maXRfYmFzZSwgcGFycyA9IGMoXCJ0ZWFtX3NraWxsXCIsIFwic3RkZXZcIikpXG5gYGAifQ== -->
-<pre class="r"><code>print(stan_fit_base, pars = c(&quot;team_skill&quot;, &quot;stdev&quot;))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiSW5mZXJlbmNlIGZvciBTdGFuIG1vZGVsOiBOQkFfYmFzZV9tb2RlbF9ub3JtYWwuXG40IGNoYWlucywgZWFjaCB3aXRoIGl0ZXI9NDAwMDsgd2FybXVwPTIwMDA7IHRoaW49MTsgXG5wb3N0LXdhcm11cCBkcmF3cyBwZXIgY2hhaW49MjAwMCwgdG90YWwgcG9zdC13YXJtdXAgZHJhd3M9ODAwMC5cblxuICAgICAgICAgICAgICAgICAgbWVhbiBzZV9tZWFuICAgICAgc2QgICAgMi41JSAgICAyNSUgICAgIDUwJSAgICAgNzUlICAgOTcuNSUgbl9lZmYgUmhhdFxudGVhbV9za2lsbFsxXSAgMzU4My42OSAyMTAxLjc4IDMwMDkuNjggLTMxMC42MiA2NDIuMDAgMzI5NC42OCA2MTI4LjQzIDgyMjcuNTMgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyXSAgMzU4Ny4zMSAyMTAxLjgwIDMwMDkuNzEgLTMwNi41OSA2NDYuMjQgMzI5Ny44NyA2MTMyLjA3IDgyMzEuMTggICAgIDIgOS4zOVxudGVhbV9za2lsbFszXSAgMzU3OC4zMiAyMTAxLjgwIDMwMDkuNzEgLTMxNS44MCA2MzcuMjEgMzI4OC44NyA2MTI0Ljc2IDgyMjIuMDAgICAgIDIgOS4zOVxudGVhbV9za2lsbFs0XSAgMzU4NS4zMCAyMTAxLjc5IDMwMDkuNjkgLTMwOC41MiA2NDQuMDQgMzI5NS44NyA2MTMxLjgzIDgyMjkuMDQgICAgIDIgOS4zOVxudGVhbV9za2lsbFs1XSAgMzU4NS4wNCAyMTAxLjc4IDMwMDkuNjggLTMwOS4wNSA2NDMuODAgMzI5Ni4wOSA2MTI5LjgyIDgyMjkuNDMgICAgIDIgOS4zOVxudGVhbV9za2lsbFs2XSAgMzU4Ny45MCAyMTAxLjgwIDMwMDkuNzEgLTMwNi45MyA2NDYuNTcgMzI5OS4wNCA2MTMyLjkwIDgyMzIuNTMgICAgIDIgOS4zOVxudGVhbV9za2lsbFs3XSAgMzU4Mi40OCAyMTAxLjc5IDMwMDkuNzAgLTMxMC45MiA2NDEuOTUgMzI5Mi42MCA2MTI3Ljk1IDgyMjYuMzcgICAgIDIgOS4zOVxudGVhbV9za2lsbFs4XSAgMzU4NS44NiAyMTAxLjgwIDMwMDkuNzEgLTMwOS4wNiA2NDQuNjcgMzI5Ni43MSA2MTMyLjI2IDgyMjkuMzggICAgIDIgOS4zOVxudGVhbV9za2lsbFs5XSAgMzU4My42NiAyMTAxLjgwIDMwMDkuNzEgLTMwOS41NiA2NDIuMzAgMzI5NC44MCA2MTI5Ljk3IDgyMjcuOTQgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxMF0gMzU5Ni42MyAyMTAxLjc4IDMwMDkuNjggLTI5Ny43MiA2NTUuMjcgMzMwNy41OSA2MTQyLjk1IDgyNDAuNTkgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxMV0gMzU5MC43OCAyMTAxLjc4IDMwMDkuNjggLTMwNC4xNyA2NDkuNTYgMzMwMC43OSA2MTM2LjcxIDgyMzQuOTIgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxMl0gMzU4NC4yNyAyMTAxLjc5IDMwMDkuNjkgLTMwOS42MCA2NDMuMjEgMzI5NS40NCA2MTMwLjUxIDgyMjguMjUgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxM10gMzU4OS41MiAyMTAxLjgxIDMwMDkuNzIgLTMwNS4wOSA2NDguMDMgMzMwMC40MSA2MTM0Ljk3IDgyMzMuNzcgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxNF0gMzU3OC42NiAyMTAxLjgwIDMwMDkuNzEgLTMxNC43MCA2MzYuNTMgMzI4OC43MiA2MTI0Ljg1IDgyMjIuNjkgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxNV0gMzU4NS43OCAyMTAxLjc5IDMwMDkuNzAgLTMwNy44MSA2NDQuMzEgMzI5Ni41NiA2MTMxLjIzIDgyMjkuOTMgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxNl0gMzU4NS43NCAyMTAxLjc4IDMwMDkuNjkgLTMwOC40OCA2NDQuMTAgMzI5Ny4wNiA2MTMxLjMwIDgyMzAuMDIgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxN10gMzU4NC44MyAyMTAxLjc5IDMwMDkuNjkgLTMwOS43NyA2NDMuMTEgMzI5NS45MSA2MTMwLjk3IDgyMjguOTMgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxOF0gMzU4NC41NSAyMTAxLjc5IDMwMDkuNzAgLTMxMC4zNSA2NDMuMzYgMzI5NS40NyA2MTI5LjUxIDgyMjkuMDUgICAgIDIgOS4zOVxudGVhbV9za2lsbFsxOV0gMzU4My40MyAyMTAxLjgwIDMwMDkuNzIgLTMwOS45NCA2NDIuMTQgMzI5NC43NyA2MTMwLjQyIDgyMjguNjcgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyMF0gMzU4MS4yOSAyMTAxLjc5IDMwMDkuNjkgLTMxMi44MSA2NDAuMTcgMzI5MS41MyA2MTI2LjMyIDgyMjUuNDcgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyMV0gMzU4NS45OSAyMTAxLjc4IDMwMDkuNjkgLTMwOC4zNCA2NDQuNzggMzI5Ny40NyA2MTMxLjA5IDgyMzAuMTYgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyMl0gMzU3OC41MiAyMTAxLjgwIDMwMDkuNzEgLTMxNi40OCA2MzcuNjQgMzI4OS4yMiA2MTI0LjA4IDgyMjIuNjkgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyM10gMzU3OS40NiAyMTAxLjc5IDMwMDkuNjkgLTMxNC43MCA2MzguMDAgMzI4OS44OSA2MTI0LjU2IDgyMjMuNzEgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyNF0gMzU4MC4wMCAyMTAxLjgwIDMwMDkuNzEgLTMxNC42OCA2MzguODkgMzI5MS44MCA2MTI2LjU5IDgyMjQuMDMgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyNV0gMzU4NC44OCAyMTAxLjgwIDMwMDkuNzEgLTMwOS44NyA2NDMuNTQgMzI5NC43NCA2MTMxLjAyIDgyMjguMjYgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyNl0gMzU4Mi4wOCAyMTAxLjc5IDMwMDkuNjkgLTMxMS43MyA2NDAuNTkgMzI5Mi44OCA2MTI3LjQ0IDgyMjUuODcgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyN10gMzU5Mi4wMiAyMTAxLjgwIDMwMDkuNzEgLTMwMS40NyA2NTEuMTMgMzMwMi41MCA2MTM3LjI4IDgyMzUuNjEgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyOF0gMzU4OC43NCAyMTAxLjgwIDMwMDkuNzAgLTMwNS42MiA2NDcuMTIgMzI5OC44MCA2MTM0LjE5IDgyMzMuMjMgICAgIDIgOS4zOVxudGVhbV9za2lsbFsyOV0gMzU4OS4wOSAyMTAxLjc5IDMwMDkuNzAgLTMwNS42MiA2NDcuOTAgMzI5OS41NiA2MTM1LjA1IDgyMzMuODggICAgIDIgOS4zOVxudGVhbV9za2lsbFszMF0gMzU4Ni40OSAyMTAxLjc5IDMwMDkuNzAgLTMwNy4wNiA2NDUuNDEgMzI5Ny4yOSA2MTMyLjIyIDgyMzAuODggICAgIDIgOS4zOVxuc3RkZXYgICAgICAgICAgICAxMi45MSAgICAwLjAzICAgIDAuMjYgICAxMi40MCAgMTIuNzIgICAxMi45MCAgIDEzLjEwICAgMTMuMzggICAgNTkgMS4wOFxuXG5TYW1wbGVzIHdlcmUgZHJhd24gdXNpbmcgTlVUUyhkaWFnX2UpIGF0IEZyaSBTZXAgMjggMjM6MDQ6NDQgMjAxOC5cbkZvciBlYWNoIHBhcmFtZXRlciwgbl9lZmYgaXMgYSBjcnVkZSBtZWFzdXJlIG9mIGVmZmVjdGl2ZSBzYW1wbGUgc2l6ZSxcbmFuZCBSaGF0IGlzIHRoZSBwb3RlbnRpYWwgc2NhbGUgcmVkdWN0aW9uIGZhY3RvciBvbiBzcGxpdCBjaGFpbnMgKGF0IFxuY29udmVyZ2VuY2UsIFJoYXQ9MSkuXG4ifQ== -->
-<pre><code>Inference for Stan model: NBA_base_model_normal.
-4 chains, each with iter=4000; warmup=2000; thin=1; 
-post-warmup draws per chain=2000, total post-warmup draws=8000.
-
-                  mean se_mean      sd    2.5%    25%     50%     75%   97.5% n_eff Rhat
-team_skill[1]  3583.69 2101.78 3009.68 -310.62 642.00 3294.68 6128.43 8227.53     2 9.39
-team_skill[2]  3587.31 2101.80 3009.71 -306.59 646.24 3297.87 6132.07 8231.18     2 9.39
-team_skill[3]  3578.32 2101.80 3009.71 -315.80 637.21 3288.87 6124.76 8222.00     2 9.39
-team_skill[4]  3585.30 2101.79 3009.69 -308.52 644.04 3295.87 6131.83 8229.04     2 9.39
-team_skill[5]  3585.04 2101.78 3009.68 -309.05 643.80 3296.09 6129.82 8229.43     2 9.39
-team_skill[6]  3587.90 2101.80 3009.71 -306.93 646.57 3299.04 6132.90 8232.53     2 9.39
-team_skill[7]  3582.48 2101.79 3009.70 -310.92 641.95 3292.60 6127.95 8226.37     2 9.39
-team_skill[8]  3585.86 2101.80 3009.71 -309.06 644.67 3296.71 6132.26 8229.38     2 9.39
-team_skill[9]  3583.66 2101.80 3009.71 -309.56 642.30 3294.80 6129.97 8227.94     2 9.39
-team_skill[10] 3596.63 2101.78 3009.68 -297.72 655.27 3307.59 6142.95 8240.59     2 9.39
-team_skill[11] 3590.78 2101.78 3009.68 -304.17 649.56 3300.79 6136.71 8234.92     2 9.39
-team_skill[12] 3584.27 2101.79 3009.69 -309.60 643.21 3295.44 6130.51 8228.25     2 9.39
-team_skill[13] 3589.52 2101.81 3009.72 -305.09 648.03 3300.41 6134.97 8233.77     2 9.39
-team_skill[14] 3578.66 2101.80 3009.71 -314.70 636.53 3288.72 6124.85 8222.69     2 9.39
-team_skill[15] 3585.78 2101.79 3009.70 -307.81 644.31 3296.56 6131.23 8229.93     2 9.39
-team_skill[16] 3585.74 2101.78 3009.69 -308.48 644.10 3297.06 6131.30 8230.02     2 9.39
-team_skill[17] 3584.83 2101.79 3009.69 -309.77 643.11 3295.91 6130.97 8228.93     2 9.39
-team_skill[18] 3584.55 2101.79 3009.70 -310.35 643.36 3295.47 6129.51 8229.05     2 9.39
-team_skill[19] 3583.43 2101.80 3009.72 -309.94 642.14 3294.77 6130.42 8228.67     2 9.39
-team_skill[20] 3581.29 2101.79 3009.69 -312.81 640.17 3291.53 6126.32 8225.47     2 9.39
-team_skill[21] 3585.99 2101.78 3009.69 -308.34 644.78 3297.47 6131.09 8230.16     2 9.39
-team_skill[22] 3578.52 2101.80 3009.71 -316.48 637.64 3289.22 6124.08 8222.69     2 9.39
-team_skill[23] 3579.46 2101.79 3009.69 -314.70 638.00 3289.89 6124.56 8223.71     2 9.39
-team_skill[24] 3580.00 2101.80 3009.71 -314.68 638.89 3291.80 6126.59 8224.03     2 9.39
-team_skill[25] 3584.88 2101.80 3009.71 -309.87 643.54 3294.74 6131.02 8228.26     2 9.39
-team_skill[26] 3582.08 2101.79 3009.69 -311.73 640.59 3292.88 6127.44 8225.87     2 9.39
-team_skill[27] 3592.02 2101.80 3009.71 -301.47 651.13 3302.50 6137.28 8235.61     2 9.39
-team_skill[28] 3588.74 2101.80 3009.70 -305.62 647.12 3298.80 6134.19 8233.23     2 9.39
-team_skill[29] 3589.09 2101.79 3009.70 -305.62 647.90 3299.56 6135.05 8233.88     2 9.39
-team_skill[30] 3586.49 2101.79 3009.70 -307.06 645.41 3297.29 6132.22 8230.88     2 9.39
-stdev            12.91    0.03    0.26   12.40  12.72   12.90   13.10   13.38    59 1.08
-
-Samples were drawn using NUTS(diag_e) at Fri Sep 28 23:04:44 2018.
-For each parameter, n_eff is a crude measure of effective sample size,
-and Rhat is the potential scale reduction factor on split chains (at 
-convergence, Rhat=1).</code></pre>
-<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
@@ -302,49 +237,15 @@ convergence, Rhat=1).</code></pre>
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoc3Rhbl9maXRfYmFzZSwgcGFycyA9IGMoXCJ0ZWFtX3NraWxsXCIsIFwic3RkZXZcIikpXG5gYGAifQ== -->
 <pre class="r"><code>print(stan_fit_base, pars = c(&quot;team_skill&quot;, &quot;stdev&quot;))</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiSW5mZXJlbmNlIGZvciBTdGFuIG1vZGVsOiBOQkFfbW9kZWxfbm9ybWFsX3dlYWtfcHJpb3JzLlxuNCBjaGFpbnMsIGVhY2ggd2l0aCBpdGVyPTQwMDA7IHdhcm11cD0yMDAwOyB0aGluPTE7IFxucG9zdC13YXJtdXAgZHJhd3MgcGVyIGNoYWluPTIwMDAsIHRvdGFsIHBvc3Qtd2FybXVwIGRyYXdzPTgwMDAuXG5cbiAgICAgICAgICAgICAgICBtZWFuIHNlX21lYW4gICBzZCAgMi41JSAgIDI1JSAgIDUwJSAgIDc1JSA5Ny41JSBuX2VmZiBSaGF0XG50ZWFtX3NraWxsWzFdICAtMS4yMSAgICAwLjAyIDEuNDYgLTQuMDQgLTIuMjMgLTEuMjAgLTAuMjIgIDEuNzAgIDgwMDAgICAgMVxudGVhbV9za2lsbFsyXSAgIDIuMDQgICAgMC4wMiAxLjQ3IC0wLjg0ICAxLjA3ICAyLjA1ICAzLjAzICA0LjkyICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbM10gIC02LjA2ICAgIDAuMDIgMS40NCAtOC45NCAtNy4wNSAtNi4wNSAtNS4wNiAtMy4yOCAgODAwMCAgICAxXG50ZWFtX3NraWxsWzRdICAgMC4yMSAgICAwLjAyIDEuNDUgLTIuNjEgLTAuNzcgIDAuMjEgIDEuMTcgIDMuMDYgIDgwMDAgICAgMVxudGVhbV9za2lsbFs1XSAgIDAuMDAgICAgMC4wMiAxLjQ1IC0yLjg0IC0wLjk4ICAwLjAwICAxLjAwICAyLjg0ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbNl0gICAyLjU3ICAgIDAuMDIgMS40NSAtMC4yNSAgMS42MCAgMi41NiAgMy41NyAgNS40MCAgODAwMCAgICAxXG50ZWFtX3NraWxsWzddICAtMi4zNiAgICAwLjAyIDEuNDkgLTUuMjcgLTMuMzYgLTIuMzYgLTEuMzcgIDAuNTUgIDgwMDAgICAgMVxudGVhbV9za2lsbFs4XSAgIDAuNjggICAgMC4wMiAxLjQ2IC0yLjE3IC0wLjI5ICAwLjY5ICAxLjY3ICAzLjUzICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbOV0gIC0xLjI2ICAgIDAuMDIgMS40NiAtNC4xMyAtMi4yNyAtMS4yNCAtMC4yNiAgMS41OCAgODAwMCAgICAxXG50ZWFtX3NraWxsWzEwXSAxMC40MCAgICAwLjAyIDEuNDYgIDcuNTMgIDkuNDIgMTAuNDEgMTEuMzggMTMuMjEgIDgwMDAgICAgMVxudGVhbV9za2lsbFsxMV0gIDUuMTMgICAgMC4wMiAxLjQyICAyLjM3ICA0LjE5ICA1LjExICA2LjA3ICA3Ljk0ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMTJdIC0wLjY2ICAgIDAuMDIgMS40NSAtMy41MSAtMS42NCAtMC42NSAgMC4zMiAgMi4xNCAgODAwMCAgICAxXG50ZWFtX3NraWxsWzEzXSAgMy45OCAgICAwLjAyIDEuNDYgIDEuMTcgIDMuMDIgIDMuOTcgIDQuOTQgIDYuODUgIDgwMDAgICAgMVxudGVhbV9za2lsbFsxNF0gLTUuODQgICAgMC4wMiAxLjQ2IC04LjcwIC02LjgyIC01LjgzIC00Ljg3IC0yLjk3ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMTVdICAwLjYwICAgIDAuMDIgMS40NCAtMi4yMyAtMC4zOCAgMC42MSAgMS41NSAgMy40MSAgODAwMCAgICAxXG50ZWFtX3NraWxsWzE2XSAgMC42NSAgICAwLjAyIDEuNDUgLTIuMTQgLTAuMzQgIDAuNjYgIDEuNjIgIDMuNTAgIDgwMDAgICAgMVxudGVhbV9za2lsbFsxN10gLTAuMTYgICAgMC4wMiAxLjQyIC0yLjk0IC0xLjEyIC0wLjE2ICAwLjgwICAyLjU5ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMThdIC0wLjUzICAgIDAuMDIgMS40MCAtMy4yNCAtMS40NiAtMC41NSAgMC40MCAgMi4yNSAgODAwMCAgICAxXG50ZWFtX3NraWxsWzE5XSAtMS41MSAgICAwLjAyIDEuNDUgLTQuMzQgLTIuNTAgLTEuNDkgLTAuNTQgIDEuMzMgIDgwMDAgICAgMVxudGVhbV9za2lsbFsyMF0gLTMuMzYgICAgMC4wMiAxLjQzIC02LjE0IC00LjM0IC0zLjM2IC0yLjQwIC0wLjUzICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMjFdICAwLjc2ICAgIDAuMDIgMS40NSAtMi4wNSAtMC4yMSAgMC43NSAgMS43MyAgMy42MSAgODAwMCAgICAxXG50ZWFtX3NraWxsWzIyXSAtNS44OCAgICAwLjAyIDEuNDIgLTguNzMgLTYuODUgLTUuODcgLTQuOTEgLTMuMTUgIDgwMDAgICAgMVxudGVhbV9za2lsbFsyM10gLTUuMDQgICAgMC4wMiAxLjQ2IC03Ljk1IC02LjAwIC01LjAyIC00LjA2IC0yLjE0ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMjRdIC00LjYyICAgIDAuMDIgMS40MyAtNy40MiAtNS41OCAtNC42MyAtMy42NSAtMS43OCAgODAwMCAgICAxXG50ZWFtX3NraWxsWzI1XSAtMC4yMCAgICAwLjAyIDEuNDYgLTMuMDQgLTEuMjAgLTAuMjAgIDAuODAgIDIuNjAgIDgwMDAgICAgMVxudGVhbV9za2lsbFsyNl0gLTIuNzQgICAgMC4wMiAxLjQ2IC01LjYzIC0zLjczIC0yLjczIC0xLjc4ICAwLjEwICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMjddICA2LjIzICAgIDAuMDIgMS40NyAgMy4zNCAgNS4yMyAgNi4yNCAgNy4yNCAgOS4wNyAgODAwMCAgICAxXG50ZWFtX3NraWxsWzI4XSAgMy4zNCAgICAwLjAyIDEuNDUgIDAuNTMgIDIuMzcgIDMuMzMgIDQuMzMgIDYuMTggIDgwMDAgICAgMVxudGVhbV9za2lsbFsyOV0gIDMuNTcgICAgMC4wMiAxLjQ0ICAwLjc3ICAyLjU5ICAzLjU5ICA0LjU1ICA2LjQ1ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMzBdICAxLjM0ICAgIDAuMDIgMS40NSAtMS40OSAgMC4zNSAgMS4zMyAgMi4zMyAgNC4yMyAgODAwMCAgICAxXG5zdGRldiAgICAgICAgICAxMi4xMyAgICAwLjAwIDAuMjIgMTEuNzEgMTEuOTggMTIuMTIgMTIuMjcgMTIuNTcgIDgwMDAgICAgMVxuXG5TYW1wbGVzIHdlcmUgZHJhd24gdXNpbmcgTlVUUyhkaWFnX2UpIGF0IEZyaSBTZXAgMjggMjM6MDU6MjYgMjAxOC5cbkZvciBlYWNoIHBhcmFtZXRlciwgbl9lZmYgaXMgYSBjcnVkZSBtZWFzdXJlIG9mIGVmZmVjdGl2ZSBzYW1wbGUgc2l6ZSxcbmFuZCBSaGF0IGlzIHRoZSBwb3RlbnRpYWwgc2NhbGUgcmVkdWN0aW9uIGZhY3RvciBvbiBzcGxpdCBjaGFpbnMgKGF0IFxuY29udmVyZ2VuY2UsIFJoYXQ9MSkuXG4ifQ== -->
-<pre><code>Inference for Stan model: NBA_model_normal_weak_priors.
-4 chains, each with iter=4000; warmup=2000; thin=1; 
-post-warmup draws per chain=2000, total post-warmup draws=8000.
-
-                mean se_mean   sd  2.5%   25%   50%   75% 97.5% n_eff Rhat
-team_skill[1]  -1.21    0.02 1.46 -4.04 -2.23 -1.20 -0.22  1.70  8000    1
-team_skill[2]   2.04    0.02 1.47 -0.84  1.07  2.05  3.03  4.92  8000    1
-team_skill[3]  -6.06    0.02 1.44 -8.94 -7.05 -6.05 -5.06 -3.28  8000    1
-team_skill[4]   0.21    0.02 1.45 -2.61 -0.77  0.21  1.17  3.06  8000    1
-team_skill[5]   0.00    0.02 1.45 -2.84 -0.98  0.00  1.00  2.84  8000    1
-team_skill[6]   2.57    0.02 1.45 -0.25  1.60  2.56  3.57  5.40  8000    1
-team_skill[7]  -2.36    0.02 1.49 -5.27 -3.36 -2.36 -1.37  0.55  8000    1
-team_skill[8]   0.68    0.02 1.46 -2.17 -0.29  0.69  1.67  3.53  8000    1
-team_skill[9]  -1.26    0.02 1.46 -4.13 -2.27 -1.24 -0.26  1.58  8000    1
-team_skill[10] 10.40    0.02 1.46  7.53  9.42 10.41 11.38 13.21  8000    1
-team_skill[11]  5.13    0.02 1.42  2.37  4.19  5.11  6.07  7.94  8000    1
-team_skill[12] -0.66    0.02 1.45 -3.51 -1.64 -0.65  0.32  2.14  8000    1
-team_skill[13]  3.98    0.02 1.46  1.17  3.02  3.97  4.94  6.85  8000    1
-team_skill[14] -5.84    0.02 1.46 -8.70 -6.82 -5.83 -4.87 -2.97  8000    1
-team_skill[15]  0.60    0.02 1.44 -2.23 -0.38  0.61  1.55  3.41  8000    1
-team_skill[16]  0.65    0.02 1.45 -2.14 -0.34  0.66  1.62  3.50  8000    1
-team_skill[17] -0.16    0.02 1.42 -2.94 -1.12 -0.16  0.80  2.59  8000    1
-team_skill[18] -0.53    0.02 1.40 -3.24 -1.46 -0.55  0.40  2.25  8000    1
-team_skill[19] -1.51    0.02 1.45 -4.34 -2.50 -1.49 -0.54  1.33  8000    1
-team_skill[20] -3.36    0.02 1.43 -6.14 -4.34 -3.36 -2.40 -0.53  8000    1
-team_skill[21]  0.76    0.02 1.45 -2.05 -0.21  0.75  1.73  3.61  8000    1
-team_skill[22] -5.88    0.02 1.42 -8.73 -6.85 -5.87 -4.91 -3.15  8000    1
-team_skill[23] -5.04    0.02 1.46 -7.95 -6.00 -5.02 -4.06 -2.14  8000    1
-team_skill[24] -4.62    0.02 1.43 -7.42 -5.58 -4.63 -3.65 -1.78  8000    1
-team_skill[25] -0.20    0.02 1.46 -3.04 -1.20 -0.20  0.80  2.60  8000    1
-team_skill[26] -2.74    0.02 1.46 -5.63 -3.73 -2.73 -1.78  0.10  8000    1
-team_skill[27]  6.23    0.02 1.47  3.34  5.23  6.24  7.24  9.07  8000    1
-team_skill[28]  3.34    0.02 1.45  0.53  2.37  3.33  4.33  6.18  8000    1
-team_skill[29]  3.57    0.02 1.44  0.77  2.59  3.59  4.55  6.45  8000    1
-team_skill[30]  1.34    0.02 1.45 -1.49  0.35  1.33  2.33  4.23  8000    1
-stdev          12.13    0.00 0.22 11.71 11.98 12.12 12.27 12.57  8000    1
-
-Samples were drawn using NUTS(diag_e) at Fri Sep 28 23:05:26 2018.
-For each parameter, n_eff is a crude measure of effective sample size,
-and Rhat is the potential scale reduction factor on split chains (at 
-convergence, Rhat=1).</code></pre>
-<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoc3Rhbl9maXRfYmFzZSwgcGFycyA9IGMoXCJ0ZWFtX3NraWxsXCIsIFwic3RkZXZcIikpXG5gYGAifQ== -->
+<pre class="r"><code>print(stan_fit_base, pars = c(&quot;team_skill&quot;, &quot;stdev&quot;))</code></pre>
+<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
@@ -354,50 +255,6 @@ convergence, Rhat=1).</code></pre>
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoc3Rhbl9maXRfYmFzZSwgcGFycyA9IGMoXCJ0ZWFtX3NraWxsXCIsIFwic2NhbGVcIiwgXCJkZWdfZnJlZVwiKSlcbmBgYCJ9 -->
 <pre class="r"><code>print(stan_fit_base, pars = c(&quot;team_skill&quot;, &quot;scale&quot;, &quot;deg_free&quot;))</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiSW5mZXJlbmNlIGZvciBTdGFuIG1vZGVsOiBOQkFfbW9kZWxfdC5cbjQgY2hhaW5zLCBlYWNoIHdpdGggaXRlcj00MDAwOyB3YXJtdXA9MjAwMDsgdGhpbj0xOyBcbnBvc3Qtd2FybXVwIGRyYXdzIHBlciBjaGFpbj0yMDAwLCB0b3RhbCBwb3N0LXdhcm11cCBkcmF3cz04MDAwLlxuXG4gICAgICAgICAgICAgICAgbWVhbiBzZV9tZWFuICAgc2QgIDIuNSUgICAyNSUgICA1MCUgICA3NSUgOTcuNSUgbl9lZmYgUmhhdFxudGVhbV9za2lsbFsxXSAgLTAuNTUgICAgMC4wMiAxLjQ3IC0zLjQ2IC0xLjU1IC0wLjU1ICAwLjQzICAyLjM0ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMl0gICAyLjE4ICAgIDAuMDIgMS4zOSAtMC41MiAgMS4yMyAgMi4xNSAgMy4xMyAgNC45NCAgODAwMCAgICAxXG50ZWFtX3NraWxsWzNdICAtNi4zMyAgICAwLjAyIDEuNDQgLTkuMTYgLTcuMjkgLTYuMzQgLTUuMzcgLTMuNTEgIDgwMDAgICAgMVxudGVhbV9za2lsbFs0XSAgLTAuMDcgICAgMC4wMiAxLjQyIC0yLjg0IC0xLjA0IC0wLjA3ICAwLjg5ICAyLjY5ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbNV0gIC0wLjU0ICAgIDAuMDIgMS40OSAtMy40MiAtMS41NSAtMC41NSAgMC40NyAgMi40NiAgODAwMCAgICAxXG50ZWFtX3NraWxsWzZdICAgMi42MSAgICAwLjAyIDEuNDMgLTAuMTUgIDEuNjYgIDIuNjAgIDMuNTggIDUuMzggIDgwMDAgICAgMVxudGVhbV9za2lsbFs3XSAgLTIuMzUgICAgMC4wMiAxLjQ2IC01LjIzIC0zLjMxIC0yLjM1IC0xLjM4ICAwLjUzICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbOF0gICAwLjUxICAgIDAuMDIgMS40MyAtMi4zMiAtMC40NSAgMC41MSAgMS40NSAgMy4yOCAgODAwMCAgICAxXG50ZWFtX3NraWxsWzldICAtMS4yMSAgICAwLjAyIDEuNTAgLTQuMTEgLTIuMjQgLTEuMjIgLTAuMjAgIDEuNzYgIDgwMDAgICAgMVxudGVhbV9za2lsbFsxMF0gMTAuNTAgICAgMC4wMiAxLjQ2ICA3LjYzICA5LjUzIDEwLjUwIDExLjQ3IDEzLjM3ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMTFdICA1LjAyICAgIDAuMDIgMS40NSAgMi4xMiAgNC4wNCAgNS4wMyAgNS45OCAgNy44MyAgODAwMCAgICAxXG50ZWFtX3NraWxsWzEyXSAtMC41MSAgICAwLjAyIDEuNDUgLTMuMzkgLTEuNDkgLTAuNTIgIDAuNDcgIDIuMjggIDgwMDAgICAgMVxudGVhbV9za2lsbFsxM10gIDQuMTEgICAgMC4wMiAxLjQ3ICAxLjI1ICAzLjEzICA0LjExICA1LjEwICA2Ljk5ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMTRdIC01LjQ1ICAgIDAuMDIgMS40NiAtOC4zNCAtNi40NSAtNS40NSAtNC40NiAtMi42MiAgODAwMCAgICAxXG50ZWFtX3NraWxsWzE1XSAgMC40NiAgICAwLjAyIDEuNDEgLTIuMzQgLTAuNDkgIDAuNDYgIDEuNDEgIDMuMTkgIDgwMDAgICAgMVxudGVhbV9za2lsbFsxNl0gIDAuNTkgICAgMC4wMiAxLjQxIC0yLjE3IC0wLjM2ICAwLjU3ICAxLjU0ICAzLjM2ICAzMzk4ICAgIDFcbnRlYW1fc2tpbGxbMTddIC0wLjMxICAgIDAuMDIgMS40NCAtMy4xMyAtMS4yOCAtMC4zMyAgMC42NyAgMi40OSAgODAwMCAgICAxXG50ZWFtX3NraWxsWzE4XSAtMS4wNCAgICAwLjAyIDEuNDEgLTMuNzMgLTEuOTkgLTEuMDUgLTAuMTEgIDEuNzUgIDgwMDAgICAgMVxudGVhbV9za2lsbFsxOV0gLTEuNTUgICAgMC4wMiAxLjQzIC00LjM4IC0yLjUwIC0xLjU1IC0wLjU3ICAxLjIyICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMjBdIC0zLjE5ICAgIDAuMDIgMS4zOCAtNS45MyAtNC4xMSAtMy4xNyAtMi4yNyAtMC41MCAgODAwMCAgICAxXG50ZWFtX3NraWxsWzIxXSAgMS4xMCAgICAwLjAyIDEuNDEgLTEuNzIgIDAuMTggIDEuMTAgIDIuMDQgIDMuOTAgIDgwMDAgICAgMVxudGVhbV9za2lsbFsyMl0gLTUuMzggICAgMC4wMiAxLjQ2IC04LjI2IC02LjM2IC01LjM4IC00LjM5IC0yLjQ4ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMjNdIC00Ljk4ICAgIDAuMDIgMS40MSAtNy44MCAtNS45MyAtNS4wMCAtNC4wMyAtMi4yMSAgODAwMCAgICAxXG50ZWFtX3NraWxsWzI0XSAtNC44NiAgICAwLjAyIDEuMzcgLTcuNTIgLTUuNzggLTQuOTAgLTMuOTMgLTIuMTcgIDgwMDAgICAgMVxudGVhbV9za2lsbFsyNV0gIDAuMjAgICAgMC4wMiAxLjQwIC0yLjUzIC0wLjc0ICAwLjIwICAxLjE3ICAyLjk2ICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMjZdIC0yLjc0ICAgIDAuMDIgMS4zOSAtNS41MiAtMy42NyAtMi43MyAtMS43OSAtMC4wMyAgODAwMCAgICAxXG50ZWFtX3NraWxsWzI3XSAgNS45OSAgICAwLjAyIDEuNDAgIDMuMjMgIDUuMDMgIDUuOTcgIDYuOTMgIDguNzQgIDgwMDAgICAgMVxudGVhbV9za2lsbFsyOF0gIDMuNDUgICAgMC4wMiAxLjQ1ICAwLjYzICAyLjQ3ICAzLjQ1ICA0LjQwICA2LjIxICA4MDAwICAgIDFcbnRlYW1fc2tpbGxbMjldICAzLjI0ICAgIDAuMDIgMS40MSAgMC40OSAgMi4yOCAgMy4yNCAgNC4xOSAgNi4wMiAgMzI2NiAgICAxXG50ZWFtX3NraWxsWzMwXSAgMS4yMiAgICAwLjAyIDEuMzUgLTEuNDMgIDAuMzIgIDEuMjAgIDIuMTMgIDMuODcgIDMxMTUgICAgMVxuc2NhbGUgICAgICAgICAgMTAuNzMgICAgMC4wMCAwLjMzIDEwLjA4IDEwLjUwIDEwLjczIDEwLjk1IDExLjM3ICA1OTMwICAgIDFcbmRlZ19mcmVlICAgICAgICA4LjIwICAgIDAuMDMgMS45OSAgNS4zOCAgNi44MyAgNy44NSAgOS4xOSAxMy4wMSAgNTQ1NCAgICAxXG5cblNhbXBsZXMgd2VyZSBkcmF3biB1c2luZyBOVVRTKGRpYWdfZSkgYXQgRnJpIFNlcCAyOCAyMzowNjoxMCAyMDE4LlxuRm9yIGVhY2ggcGFyYW1ldGVyLCBuX2VmZiBpcyBhIGNydWRlIG1lYXN1cmUgb2YgZWZmZWN0aXZlIHNhbXBsZSBzaXplLFxuYW5kIFJoYXQgaXMgdGhlIHBvdGVudGlhbCBzY2FsZSByZWR1Y3Rpb24gZmFjdG9yIG9uIHNwbGl0IGNoYWlucyAoYXQgXG5jb252ZXJnZW5jZSwgUmhhdD0xKS5cbiJ9 -->
-<pre><code>Inference for Stan model: NBA_model_t.
-4 chains, each with iter=4000; warmup=2000; thin=1; 
-post-warmup draws per chain=2000, total post-warmup draws=8000.
-
-                mean se_mean   sd  2.5%   25%   50%   75% 97.5% n_eff Rhat
-team_skill[1]  -0.55    0.02 1.47 -3.46 -1.55 -0.55  0.43  2.34  8000    1
-team_skill[2]   2.18    0.02 1.39 -0.52  1.23  2.15  3.13  4.94  8000    1
-team_skill[3]  -6.33    0.02 1.44 -9.16 -7.29 -6.34 -5.37 -3.51  8000    1
-team_skill[4]  -0.07    0.02 1.42 -2.84 -1.04 -0.07  0.89  2.69  8000    1
-team_skill[5]  -0.54    0.02 1.49 -3.42 -1.55 -0.55  0.47  2.46  8000    1
-team_skill[6]   2.61    0.02 1.43 -0.15  1.66  2.60  3.58  5.38  8000    1
-team_skill[7]  -2.35    0.02 1.46 -5.23 -3.31 -2.35 -1.38  0.53  8000    1
-team_skill[8]   0.51    0.02 1.43 -2.32 -0.45  0.51  1.45  3.28  8000    1
-team_skill[9]  -1.21    0.02 1.50 -4.11 -2.24 -1.22 -0.20  1.76  8000    1
-team_skill[10] 10.50    0.02 1.46  7.63  9.53 10.50 11.47 13.37  8000    1
-team_skill[11]  5.02    0.02 1.45  2.12  4.04  5.03  5.98  7.83  8000    1
-team_skill[12] -0.51    0.02 1.45 -3.39 -1.49 -0.52  0.47  2.28  8000    1
-team_skill[13]  4.11    0.02 1.47  1.25  3.13  4.11  5.10  6.99  8000    1
-team_skill[14] -5.45    0.02 1.46 -8.34 -6.45 -5.45 -4.46 -2.62  8000    1
-team_skill[15]  0.46    0.02 1.41 -2.34 -0.49  0.46  1.41  3.19  8000    1
-team_skill[16]  0.59    0.02 1.41 -2.17 -0.36  0.57  1.54  3.36  3398    1
-team_skill[17] -0.31    0.02 1.44 -3.13 -1.28 -0.33  0.67  2.49  8000    1
-team_skill[18] -1.04    0.02 1.41 -3.73 -1.99 -1.05 -0.11  1.75  8000    1
-team_skill[19] -1.55    0.02 1.43 -4.38 -2.50 -1.55 -0.57  1.22  8000    1
-team_skill[20] -3.19    0.02 1.38 -5.93 -4.11 -3.17 -2.27 -0.50  8000    1
-team_skill[21]  1.10    0.02 1.41 -1.72  0.18  1.10  2.04  3.90  8000    1
-team_skill[22] -5.38    0.02 1.46 -8.26 -6.36 -5.38 -4.39 -2.48  8000    1
-team_skill[23] -4.98    0.02 1.41 -7.80 -5.93 -5.00 -4.03 -2.21  8000    1
-team_skill[24] -4.86    0.02 1.37 -7.52 -5.78 -4.90 -3.93 -2.17  8000    1
-team_skill[25]  0.20    0.02 1.40 -2.53 -0.74  0.20  1.17  2.96  8000    1
-team_skill[26] -2.74    0.02 1.39 -5.52 -3.67 -2.73 -1.79 -0.03  8000    1
-team_skill[27]  5.99    0.02 1.40  3.23  5.03  5.97  6.93  8.74  8000    1
-team_skill[28]  3.45    0.02 1.45  0.63  2.47  3.45  4.40  6.21  8000    1
-team_skill[29]  3.24    0.02 1.41  0.49  2.28  3.24  4.19  6.02  3266    1
-team_skill[30]  1.22    0.02 1.35 -1.43  0.32  1.20  2.13  3.87  3115    1
-scale          10.73    0.00 0.33 10.08 10.50 10.73 10.95 11.37  5930    1
-deg_free        8.20    0.03 1.99  5.38  6.83  7.85  9.19 13.01  5454    1
-
-Samples were drawn using NUTS(diag_e) at Fri Sep 28 23:06:10 2018.
-For each parameter, n_eff is a crude measure of effective sample size,
-and Rhat is the potential scale reduction factor on split chains (at 
-convergence, Rhat=1).</code></pre>
-<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
@@ -407,56 +264,11 @@ convergence, Rhat=1).</code></pre>
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoc3Rhbl9maXRfaG9tZSwgcGFycyA9IGMoXCJ0ZWFtX3NraWxsXCIsIFwiaG9tZV9jb3VydF9hZHZhbnRhZ2VcIiwgXCJkZWdfZnJlZVwiLCBcInNjYWxlXCIpKVxuYGBgIn0= -->
 <pre class="r"><code>print(stan_fit_home, pars = c(&quot;team_skill&quot;, &quot;home_court_advantage&quot;, &quot;deg_free&quot;, &quot;scale&quot;))</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiSW5mZXJlbmNlIGZvciBTdGFuIG1vZGVsOiBOQkFfbW9kZWxfd2l0aF9ob21lX2NvdXJ0LlxuNCBjaGFpbnMsIGVhY2ggd2l0aCBpdGVyPTQwMDA7IHdhcm11cD0yMDAwOyB0aGluPTE7IFxucG9zdC13YXJtdXAgZHJhd3MgcGVyIGNoYWluPTIwMDAsIHRvdGFsIHBvc3Qtd2FybXVwIGRyYXdzPTgwMDAuXG5cbiAgICAgICAgICAgICAgICAgICAgICBtZWFuIHNlX21lYW4gICBzZCAgMi41JSAgIDI1JSAgIDUwJSAgIDc1JSA5Ny41JSBuX2VmZiBSaGF0XG50ZWFtX3NraWxsWzFdICAgICAgICAtMC42MiAgICAwLjAzIDEuNDEgLTMuMzcgLTEuNTYgLTAuNjIgIDAuMzQgIDIuMTAgIDI5MjkgICAgMVxudGVhbV9za2lsbFsyXSAgICAgICAgIDIuMTMgICAgMC4wMyAxLjM2IC0wLjQ5ICAxLjIwICAyLjEyICAzLjAzICA0Ljg1ICAyODEyICAgIDFcbnRlYW1fc2tpbGxbM10gICAgICAgIC02LjQ3ICAgIDAuMDIgMS4zOSAtOS4yNSAtNy4zOSAtNi40OSAtNS41NSAtMy43MyAgMzEwNiAgICAxXG50ZWFtX3NraWxsWzRdICAgICAgICAtMC4wMSAgICAwLjAyIDEuMzkgLTIuNzQgLTAuOTQgLTAuMDIgIDAuOTUgIDIuNzEgIDM1NjIgICAgMVxudGVhbV9za2lsbFs1XSAgICAgICAgLTAuNTIgICAgMC4wMyAxLjQ1IC0zLjM2IC0xLjQ5IC0wLjUyICAwLjQ3ICAyLjMxICAzMjkzICAgIDFcbnRlYW1fc2tpbGxbNl0gICAgICAgICAyLjY3ICAgIDAuMDMgMS4zOCAtMC4wNiAgMS43NSAgMi42NyAgMy42MCAgNS4zNCAgMzAyNyAgICAxXG50ZWFtX3NraWxsWzddICAgICAgICAtMi4xOSAgICAwLjAyIDEuMzkgLTQuODkgLTMuMTMgLTIuMTggLTEuMjYgIDAuNTMgIDMxNjcgICAgMVxudGVhbV9za2lsbFs4XSAgICAgICAgIDAuNzUgICAgMC4wMyAxLjQxIC0xLjk4IC0wLjE5ICAwLjc4ICAxLjcwICAzLjUyICAyODU0ICAgIDFcbnRlYW1fc2tpbGxbOV0gICAgICAgIC0xLjQ5ICAgIDAuMDIgMS40NiAtNC4yOSAtMi40NyAtMS41MCAtMC41MCAgMS4zOCAgMzQ0MyAgICAxXG50ZWFtX3NraWxsWzEwXSAgICAgICAxMC41OCAgICAwLjAzIDEuNDIgIDcuNzggIDkuNjMgMTAuNTYgMTEuNTQgMTMuMzkgIDMxNTIgICAgMVxudGVhbV9za2lsbFsxMV0gICAgICAgIDQuOTggICAgMC4wMyAxLjQyICAyLjE1ICA0LjA1ICA0Ljk4ICA1Ljk1ICA3Ljc3ICAyODkzICAgIDFcbnRlYW1fc2tpbGxbMTJdICAgICAgIC0wLjQ0ICAgIDAuMDMgMS40MyAtMy4yMCAtMS40MSAtMC40NSAgMC41MiAgMi4zOCAgMzA0MCAgICAxXG50ZWFtX3NraWxsWzEzXSAgICAgICAgMy45OCAgICAwLjAzIDEuNDUgIDEuMTcgIDIuOTkgIDMuOTggIDQuOTcgIDYuODIgIDMxMTkgICAgMVxudGVhbV9za2lsbFsxNF0gICAgICAgLTUuNzQgICAgMC4wMyAxLjQ0IC04LjYwIC02LjcwIC01Ljc0IC00Ljc4IC0yLjkzICAzMjA4ICAgIDFcbnRlYW1fc2tpbGxbMTVdICAgICAgICAwLjU1ICAgIDAuMDMgMS40MSAtMi4yMSAtMC40MCAgMC41NCAgMS41MCAgMy4zNyAgMjk4MSAgICAxXG50ZWFtX3NraWxsWzE2XSAgICAgICAgMC42NCAgICAwLjAzIDEuMzggLTIuMTIgLTAuMjggIDAuNjQgIDEuNTkgIDMuMzEgIDI4ODggICAgMVxudGVhbV9za2lsbFsxN10gICAgICAgLTAuNDkgICAgMC4wMyAxLjQwIC0zLjI1IC0xLjQyIC0wLjUxICAwLjQ0ICAyLjMwICAyNjYxICAgIDFcbnRlYW1fc2tpbGxbMThdICAgICAgIC0wLjk2ICAgIDAuMDMgMS4zOSAtMy42NiAtMS44NyAtMC45OCAtMC4wNSAgMS43NSAgMjc0MSAgICAxXG50ZWFtX3NraWxsWzE5XSAgICAgICAtMS4zNSAgICAwLjAzIDEuNDAgLTQuMDkgLTIuMjggLTEuMzYgLTAuNDIgIDEuNDggIDMxMjAgICAgMVxudGVhbV9za2lsbFsyMF0gICAgICAgLTMuMjAgICAgMC4wMyAxLjM2IC01Ljg5IC00LjEzIC0zLjIwIC0yLjI5IC0wLjQ3ICAyNzk0ICAgIDFcbnRlYW1fc2tpbGxbMjFdICAgICAgICAxLjAyICAgIDAuMDMgMS4zOSAtMS43MyAgMC4wNyAgMS4wMiAgMS45NyAgMy43MCAgMjg5NCAgICAxXG50ZWFtX3NraWxsWzIyXSAgICAgICAtNS42NiAgICAwLjAyIDEuNDQgLTguNTAgLTYuNjIgLTUuNjYgLTQuNzEgLTIuODMgIDgwMDAgICAgMVxudGVhbV9za2lsbFsyM10gICAgICAgLTUuMDQgICAgMC4wMyAxLjQwIC03LjcyIC02LjAxIC01LjA2IC00LjA2IC0yLjMzICAyNjkzICAgIDFcbnRlYW1fc2tpbGxbMjRdICAgICAgIC00LjgwICAgIDAuMDIgMS4zNyAtNy40NSAtNS43MSAtNC43OSAtMy44OCAtMi4xNSAgMzEzNiAgICAxXG50ZWFtX3NraWxsWzI1XSAgICAgICAgMC4xMSAgICAwLjAzIDEuMzYgLTIuNTEgLTAuODEgIDAuMTMgIDEuMDMgIDIuODEgIDI4MzEgICAgMVxudGVhbV9za2lsbFsyNl0gICAgICAgLTIuODEgICAgMC4wMyAxLjQyIC01LjUyIC0zLjc3IC0yLjgyIC0xLjg0IC0wLjAyICAyNzgxICAgIDFcbnRlYW1fc2tpbGxbMjddICAgICAgICA2LjE0ICAgIDAuMDMgMS4zOSAgMy4zOCAgNS4yMyAgNi4xMyAgNy4xMCAgOC44NCAgMjgzNiAgICAxXG50ZWFtX3NraWxsWzI4XSAgICAgICAgMy40NSAgICAwLjAzIDEuNDAgIDAuNzMgIDIuNTEgIDMuNDQgIDQuNDAgIDYuMjEgIDI5MjkgICAgMVxudGVhbV9za2lsbFsyOV0gICAgICAgIDMuMTkgICAgMC4wMyAxLjM5ICAwLjUwICAyLjI2ICAzLjE4ICA0LjE1ICA1LjkyICAyNzU2ICAgIDFcbnRlYW1fc2tpbGxbMzBdICAgICAgICAxLjE1ICAgIDAuMDMgMS4zNSAtMS40MyAgMC4yMyAgMS4xNCAgMi4wNyAgMy44MSAgMjc2NyAgICAxXG5ob21lX2NvdXJ0X2FkdmFudGFnZSAgMi45OCAgICAwLjAwIDAuMzMgIDIuMzIgIDIuNzUgIDIuOTcgIDMuMTkgIDMuNjMgIDgwMDAgICAgMVxuZGVnX2ZyZWUgICAgICAgICAgICAgIDguODkgICAgMC4wNCAyLjM1ICA1LjY3ICA3LjI5ICA4LjQ3ICA5Ljk2IDE0LjYyICA0MTQwICAgIDFcbnNjYWxlICAgICAgICAgICAgICAgIDEwLjUzICAgIDAuMDAgMC4zMyAgOS44OCAxMC4zMCAxMC41MyAxMC43NSAxMS4xOCAgNDkxMCAgICAxXG5cblNhbXBsZXMgd2VyZSBkcmF3biB1c2luZyBOVVRTKGRpYWdfZSkgYXQgRnJpIFNlcCAyOCAyMzowNjo1NCAyMDE4LlxuRm9yIGVhY2ggcGFyYW1ldGVyLCBuX2VmZiBpcyBhIGNydWRlIG1lYXN1cmUgb2YgZWZmZWN0aXZlIHNhbXBsZSBzaXplLFxuYW5kIFJoYXQgaXMgdGhlIHBvdGVudGlhbCBzY2FsZSByZWR1Y3Rpb24gZmFjdG9yIG9uIHNwbGl0IGNoYWlucyAoYXQgXG5jb252ZXJnZW5jZSwgUmhhdD0xKS5cbiJ9 -->
-<pre><code>Inference for Stan model: NBA_model_with_home_court.
-4 chains, each with iter=4000; warmup=2000; thin=1; 
-post-warmup draws per chain=2000, total post-warmup draws=8000.
-
-                      mean se_mean   sd  2.5%   25%   50%   75% 97.5% n_eff Rhat
-team_skill[1]        -0.62    0.03 1.41 -3.37 -1.56 -0.62  0.34  2.10  2929    1
-team_skill[2]         2.13    0.03 1.36 -0.49  1.20  2.12  3.03  4.85  2812    1
-team_skill[3]        -6.47    0.02 1.39 -9.25 -7.39 -6.49 -5.55 -3.73  3106    1
-team_skill[4]        -0.01    0.02 1.39 -2.74 -0.94 -0.02  0.95  2.71  3562    1
-team_skill[5]        -0.52    0.03 1.45 -3.36 -1.49 -0.52  0.47  2.31  3293    1
-team_skill[6]         2.67    0.03 1.38 -0.06  1.75  2.67  3.60  5.34  3027    1
-team_skill[7]        -2.19    0.02 1.39 -4.89 -3.13 -2.18 -1.26  0.53  3167    1
-team_skill[8]         0.75    0.03 1.41 -1.98 -0.19  0.78  1.70  3.52  2854    1
-team_skill[9]        -1.49    0.02 1.46 -4.29 -2.47 -1.50 -0.50  1.38  3443    1
-team_skill[10]       10.58    0.03 1.42  7.78  9.63 10.56 11.54 13.39  3152    1
-team_skill[11]        4.98    0.03 1.42  2.15  4.05  4.98  5.95  7.77  2893    1
-team_skill[12]       -0.44    0.03 1.43 -3.20 -1.41 -0.45  0.52  2.38  3040    1
-team_skill[13]        3.98    0.03 1.45  1.17  2.99  3.98  4.97  6.82  3119    1
-team_skill[14]       -5.74    0.03 1.44 -8.60 -6.70 -5.74 -4.78 -2.93  3208    1
-team_skill[15]        0.55    0.03 1.41 -2.21 -0.40  0.54  1.50  3.37  2981    1
-team_skill[16]        0.64    0.03 1.38 -2.12 -0.28  0.64  1.59  3.31  2888    1
-team_skill[17]       -0.49    0.03 1.40 -3.25 -1.42 -0.51  0.44  2.30  2661    1
-team_skill[18]       -0.96    0.03 1.39 -3.66 -1.87 -0.98 -0.05  1.75  2741    1
-team_skill[19]       -1.35    0.03 1.40 -4.09 -2.28 -1.36 -0.42  1.48  3120    1
-team_skill[20]       -3.20    0.03 1.36 -5.89 -4.13 -3.20 -2.29 -0.47  2794    1
-team_skill[21]        1.02    0.03 1.39 -1.73  0.07  1.02  1.97  3.70  2894    1
-team_skill[22]       -5.66    0.02 1.44 -8.50 -6.62 -5.66 -4.71 -2.83  8000    1
-team_skill[23]       -5.04    0.03 1.40 -7.72 -6.01 -5.06 -4.06 -2.33  2693    1
-team_skill[24]       -4.80    0.02 1.37 -7.45 -5.71 -4.79 -3.88 -2.15  3136    1
-team_skill[25]        0.11    0.03 1.36 -2.51 -0.81  0.13  1.03  2.81  2831    1
-team_skill[26]       -2.81    0.03 1.42 -5.52 -3.77 -2.82 -1.84 -0.02  2781    1
-team_skill[27]        6.14    0.03 1.39  3.38  5.23  6.13  7.10  8.84  2836    1
-team_skill[28]        3.45    0.03 1.40  0.73  2.51  3.44  4.40  6.21  2929    1
-team_skill[29]        3.19    0.03 1.39  0.50  2.26  3.18  4.15  5.92  2756    1
-team_skill[30]        1.15    0.03 1.35 -1.43  0.23  1.14  2.07  3.81  2767    1
-home_court_advantage  2.98    0.00 0.33  2.32  2.75  2.97  3.19  3.63  8000    1
-deg_free              8.89    0.04 2.35  5.67  7.29  8.47  9.96 14.62  4140    1
-scale                10.53    0.00 0.33  9.88 10.30 10.53 10.75 11.18  4910    1
-
-Samples were drawn using NUTS(diag_e) at Fri Sep 28 23:06:54 2018.
-For each parameter, n_eff is a crude measure of effective sample size,
-and Rhat is the potential scale reduction factor on split chains (at 
-convergence, Rhat=1).</code></pre>
-<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiTkJBIEdhbWUgUHJlZGljdGlvbnMiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KCmBgYHtyIGxvYWQgcGFja2FnZXMgYW5kIGZ1cnRoZXIgc2V0dXAsIG1lc3NhZ2U9RkFMU0UsIGluY2x1ZGU9RkFMU0V9CmxpYnJhcnkodGlkeXZlcnNlKQpsaWJyYXJ5KHJzdGFuKQpsaWJyYXJ5KGJheWVzcGxvdCkKCnRoZW1lX3NldChiYXllc3Bsb3Q6OnRoZW1lX2RlZmF1bHQoKSkKCm9wdGlvbnMobWMuY29yZXMgPSBwYXJhbGxlbDo6ZGV0ZWN0Q29yZXMoKSkKCnNvdXJjZSgiTkJBX3V0aWxpdGllcy5SIikKCnNldC5zZWVkKDEyKQpgYGAKCmBgYHtyIGxvYWQgZGF0YSBhbmQgc29tZSBkYXRhIG1hbmlwdWxhdGlvbn0KZ2FtZV9kYXRhIDwtIHJlYWRfY3N2KCJOQkEgR2FtZSBEYXRhIDIwMTYyMDE3LmNzdiIpCmdhbWVfZGF0YSA8LSBnYW1lX2RhdGEgJT4lIAogICAgICAgICAgICAgICAgc2VsZWN0KGRhdGUgPSBEYXRlLCBhd2F5X3RlYW0gPSAiVmlzaXRvci9OZXV0cmFsIiwgaG9tZV90ZWFtID0gIkhvbWUvTmV1dHJhbCIsIHB0c19hd2F5ID0gUFRTX0EsIHB0c19ob21lID0gUFRTX0gsIG92ZXJ0aW1lID0gT1QpICU+JQogICAgICAgICAgICAgICAgbXV0YXRlKHNjb3JlX2RpZmYgPSBwdHNfYXdheSAtIHB0c19ob21lLAogICAgICAgICAgICAgICAgICAgICAgIG92ZXJ0aW1lID0gaWZlbHNlIChpcy5uYShvdmVydGltZSksIDAsIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpZmVsc2Uoc3RyaW5ncjo6c3RyX2xlbmd0aChvdmVydGltZSkgPT0gMiwgMSwgYXMuaW50ZWdlcihzdWJzdHJpbmcob3ZlcnRpbWUsIDEsIDEpKSkpKQoKIyBjcmVhdGUgYSBzaW5nbGUgaWRlbnRpZmllciB1c2VkIGZvciBib3RoIGF3YXkgYW5kIGhvbWUgdGVhbXMKdW5pcXVlX3RlYW1zIDwtIHNvcnQodW5pcXVlKGMoZ2FtZV9kYXRhJGF3YXlfdGVhbSwgZ2FtZV9kYXRhJGhvbWVfdGVhbSkpKQp0ZWFtX21hcHBpbmdfdGFibGUgPC0gdGliYmxlKHRlYW1fbmFtZSA9IHVuaXF1ZV90ZWFtcywgdGVhbV9pZCA9IDE6bGVuZ3RoKHVuaXF1ZV90ZWFtcykpCgpsb29rdXBfdGVhbV9pZCA8LSBmdW5jdGlvbih0ZWFtX25hbWVfbG9va3VwLCBtYXBwaW5nX3RhYmxlKSB7CiAgdG1wX3RhYmxlIDwtIGZpbHRlcihtYXBwaW5nX3RhYmxlLCB0ZWFtX25hbWUgPT0gdGVhbV9uYW1lX2xvb2t1cCkKICBpZiAobnJvdyh0bXBfdGFibGUpICE9IDEpIHsKICAgIHN0b3AocGFzdGUoImxvb2t1cC1yb3dzIHNob3VsZCBiZSBlcXVhbCB0byBvbmUgYnV0IGZvdW5kIiwgbnJvdyh0bXBfdGFibGUpLCAiaW5zdGVhZCIpKQogIH0KICBvdXQgPC0gdG1wX3RhYmxlJHRlYW1faWQKICBvdXQKfQoKdGVhbV9pZCA8LSBtYXBfaW50KGMoZ2FtZV9kYXRhJGF3YXlfdGVhbSwgZ2FtZV9kYXRhJGhvbWVfdGVhbSksIGxvb2t1cF90ZWFtX2lkLCBtYXBwaW5nX3RhYmxlID0gdGVhbV9tYXBwaW5nX3RhYmxlKQpOX2dhbWVzIDwtIG5yb3coZ2FtZV9kYXRhKQpnYW1lX2RhdGEgPC0gZ2FtZV9kYXRhICU+JSBtdXRhdGUoYXdheV90ZWFtX2lkID0gdGVhbV9pZFsxOk5fZ2FtZXNdLCBob21lX3RlYW1faWQgPSB0ZWFtX2lkWyhOX2dhbWVzICsgMSk6KDIgKiBOX2dhbWVzKV0pCk5fZ2FtZXNfcGVyX3RlYW0gPC0gODIKbl9zaW1zIDwtIDQwMDAKCmBgYAoKRm9yIG5vdyB3ZSB3b24ndCBpbmNsdWRlIGdhbWVzIHRoYXQgd2VudCBpbnRvIG92ZXJ0aW1lLCBhcyB0aGVzZSBjb3VsZCBiZSBjb25zaWRlcmVkIGEgJ3RpZScuIFRoZXJlIHdlcmUgYSB0b3RhbCBvZiA3MCBnYW1lcyB0aGF0IHdlbnQgdG8gb3ZlcnRpbWUgaW4gdGhlIHJlZ3VsYXIgc2Vhc29uIG9mIDIwMTYvMjAxNy4KCmBgYHtyIHNldCB1cCBkYXRhIGZvciBTdGFufQpzdGFuX2RhdGEgPC0gbGlzdCgKICAgICAgICAgICAgICAgICAgICBOX2dhbWVzIDwtIE5fZ2FtZXMsCiAgICAgICAgICAgICAgICAgICAgTl90ZWFtcyA8LSBsZW5ndGgodGVhbV9tYXBwaW5nX3RhYmxlJHRlYW1faWQpLAogICAgICAgICAgICAgICAgICAgIGF3YXlfcG9pbnRzIDwtIGdhbWVfZGF0YSRwdHNfYXdheSwKICAgICAgICAgICAgICAgICAgICBob21lX3BvaW50cyA8LSBnYW1lX2RhdGEkcHRzX2hvbWUsCiAgICAgICAgICAgICAgICAgICAgb3ZlcnRpbWUgPC0gZ2FtZV9kYXRhJG92ZXJ0aW1lLAogICAgICAgICAgICAgICAgICAgIGF3YXlfdGVhbV9pZCA8LSBnYW1lX2RhdGEkYXdheV90ZWFtX2lkLAogICAgICAgICAgICAgICAgICAgIGhvbWVfdGVhbV9pZCA8LSBnYW1lX2RhdGEkaG9tZV90ZWFtX2lkCiAgICAgICAgICAgICAgICAgICkKYGBgCgoKYGBge3IgY29tcGlsZSBhbmQgZml0IGJhc2UgU3RhbiBtb2RlbCwgaW5jbHVkZSA9IEZBTFNFfQpzdGFuX21vZGVsX2Jhc2VfY29tcCA8LSBzdGFuX21vZGVsKGZpbGUgPSAiU3Rhbl9tb2RlbHMvTkJBX2Jhc2VfbW9kZWxfbm9ybWFsLnN0YW4iKQoKc3Rhbl9maXRfYmFzZSA8LSBzYW1wbGluZyhzdGFuX21vZGVsX2Jhc2VfY29tcCwgZGF0YSA9IHN0YW5fZGF0YSwgY2hhaW5zID0gNCwgaXRlciA9IG5fc2ltcykKYGBgCgpgYGB7ciBhbmFseXplIGJhc2UgU3RhbiBtb2RlbH0KcHJpbnQoc3Rhbl9maXRfYmFzZSwgcGFycyA9IGMoInRlYW1fc2tpbGwiLCAic3RkZXYiKSkKYGBgCgpgYGB7ciBjb21waWxlIGFuZCBmaXQgd2VhayBwcmlvciBub3JtYWwgU3RhbiBtb2RlbCwgaW5jbHVkZSA9IEZBTFNFfQpzdGFuX21vZGVsX2Jhc2VfY29tcCA8LSBzdGFuX21vZGVsKGZpbGUgPSAiU3Rhbl9tb2RlbHMvTkJBX21vZGVsX25vcm1hbF93ZWFrX3ByaW9ycy5zdGFuIikKCnN0YW5fZml0X2Jhc2UgPC0gc2FtcGxpbmcoc3Rhbl9tb2RlbF9iYXNlX2NvbXAsIGRhdGEgPSBzdGFuX2RhdGEsIGNoYWlucyA9IDQsIGl0ZXIgPSBuX3NpbXMpCmBgYAoKYGBge3IgYW5hbHl6ZSB3ZWFrIHByaW9yIG5vcm1hbCBTdGFuIG1vZGVsfQpwcmludChzdGFuX2ZpdF9iYXNlLCBwYXJzID0gYygidGVhbV9za2lsbCIsICJzdGRldiIpKQpgYGAKCmBgYHtyIGNvbXBpbGUgYW5kIGZpdCB0IFN0YW4gbW9kZWwsIGluY2x1ZGUgPSBGQUxTRX0Kc3Rhbl9tb2RlbF9iYXNlX2NvbXAgPC0gc3Rhbl9tb2RlbChmaWxlID0gIlN0YW5fbW9kZWxzL05CQV9tb2RlbF90LnN0YW4iKQoKc3Rhbl9maXRfYmFzZSA8LSBzYW1wbGluZyhzdGFuX21vZGVsX2Jhc2VfY29tcCwgZGF0YSA9IHN0YW5fZGF0YSwgY2hhaW5zID0gNCwgaXRlciA9IG5fc2ltcykKYGBgCgpgYGB7ciBhbmFseXplIHQgU3RhbiBtb2RlbH0KcHJpbnQoc3Rhbl9maXRfYmFzZSwgcGFycyA9IGMoInRlYW1fc2tpbGwiLCAic2NhbGUiLCAiZGVnX2ZyZWUiKSkKYGBgCgoKYGBge3IgY29tcGlsZSBhbmQgZml0IFN0YW4gbW9kZWwgd2l0aCBob21lIGNvdXJ0IGFkdmFudGFnZSwgaW5jbHVkZSA9IEZBTFNFfQpzdGFuX21vZGVsX2hvbWVfY29tcCA8LSBzdGFuX21vZGVsKGZpbGUgPSAiU3Rhbl9tb2RlbHMvTkJBX21vZGVsX3dpdGhfaG9tZV9jb3VydC5zdGFuIikKCnN0YW5fZml0X2hvbWUgPC0gc2FtcGxpbmcoc3Rhbl9tb2RlbF9ob21lX2NvbXAsIGRhdGEgPSBzdGFuX2RhdGEsIGNoYWlucyA9IDQsIGl0ZXIgPSBuX3NpbXMpCmBgYAoKCmBgYHtyIGFuYWx5emUgU3RhbiBtb2RlbCB3aXRoIGhvbWUgY291cnQgYWR2YW50YWdlfQpwcmludChzdGFuX2ZpdF9ob21lLCBwYXJzID0gYygidGVhbV9za2lsbCIsICJob21lX2NvdXJ0X2FkdmFudGFnZSIsICJkZWdfZnJlZSIsICJzY2FsZSIpKQpgYGAKCg==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiTkJBIEdhbWUgUHJlZGljdGlvbnMiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KCmBgYHtyIGxvYWQgcGFja2FnZXMgYW5kIGZ1cnRoZXIgc2V0dXAsIG1lc3NhZ2U9RkFMU0UsIGluY2x1ZGU9RkFMU0V9CmxpYnJhcnkodGlkeXZlcnNlKQpsaWJyYXJ5KHJzdGFuKQpsaWJyYXJ5KGJheWVzcGxvdCkKCnRoZW1lX3NldChiYXllc3Bsb3Q6OnRoZW1lX2RlZmF1bHQoKSkKCm9wdGlvbnMobWMuY29yZXMgPSBwYXJhbGxlbDo6ZGV0ZWN0Q29yZXMoKSkKCnNvdXJjZSgiTkJBX3V0aWxpdGllcy5SIikKCnNldC5zZWVkKDEyKQpgYGAKCmBgYHtyIGxvYWQgZGF0YSBhbmQgc29tZSBkYXRhIG1hbmlwdWxhdGlvbn0KZ2FtZV9kYXRhIDwtIHJlYWRfY3N2KCJOQkEgR2FtZSBEYXRhIDIwMTYyMDE3LmNzdiIpCmdhbWVfZGF0YSA8LSBnYW1lX2RhdGEgJT4lIAogICAgICAgICAgICAgICAgc2VsZWN0KGRhdGUgPSBEYXRlLCBhd2F5X3RlYW0gPSAiVmlzaXRvci9OZXV0cmFsIiwgaG9tZV90ZWFtID0gIkhvbWUvTmV1dHJhbCIsIHB0c19hd2F5ID0gUFRTX0EsIHB0c19ob21lID0gUFRTX0gsIG92ZXJ0aW1lID0gT1QpICU+JQogICAgICAgICAgICAgICAgbXV0YXRlKHNjb3JlX2RpZmYgPSBwdHNfYXdheSAtIHB0c19ob21lLAogICAgICAgICAgICAgICAgICAgICAgIG92ZXJ0aW1lID0gaWZlbHNlIChpcy5uYShvdmVydGltZSksIDAsIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpZmVsc2Uoc3RyaW5ncjo6c3RyX2xlbmd0aChvdmVydGltZSkgPT0gMiwgMSwgYXMuaW50ZWdlcihzdWJzdHJpbmcob3ZlcnRpbWUsIDEsIDEpKSkpKQoKIyBjcmVhdGUgYSBzaW5nbGUgaWRlbnRpZmllciB1c2VkIGZvciBib3RoIGF3YXkgYW5kIGhvbWUgdGVhbXMKdW5pcXVlX3RlYW1zIDwtIHNvcnQodW5pcXVlKGMoZ2FtZV9kYXRhJGF3YXlfdGVhbSwgZ2FtZV9kYXRhJGhvbWVfdGVhbSkpKQp0ZWFtX21hcHBpbmdfdGFibGUgPC0gdGliYmxlKHRlYW1fbmFtZSA9IHVuaXF1ZV90ZWFtcywgdGVhbV9pZCA9IDE6bGVuZ3RoKHVuaXF1ZV90ZWFtcykpCgpsb29rdXBfdGVhbV9pZCA8LSBmdW5jdGlvbih0ZWFtX25hbWVfbG9va3VwLCBtYXBwaW5nX3RhYmxlKSB7CiAgdG1wX3RhYmxlIDwtIGZpbHRlcihtYXBwaW5nX3RhYmxlLCB0ZWFtX25hbWUgPT0gdGVhbV9uYW1lX2xvb2t1cCkKICBpZiAobnJvdyh0bXBfdGFibGUpICE9IDEpIHsKICAgIHN0b3AocGFzdGUoImxvb2t1cC1yb3dzIHNob3VsZCBiZSBlcXVhbCB0byBvbmUgYnV0IGZvdW5kIiwgbnJvdyh0bXBfdGFibGUpLCAiaW5zdGVhZCIpKQogIH0KICBvdXQgPC0gdG1wX3RhYmxlJHRlYW1faWQKICBvdXQKfQoKdGVhbV9pZCA8LSBtYXBfaW50KGMoZ2FtZV9kYXRhJGF3YXlfdGVhbSwgZ2FtZV9kYXRhJGhvbWVfdGVhbSksIGxvb2t1cF90ZWFtX2lkLCBtYXBwaW5nX3RhYmxlID0gdGVhbV9tYXBwaW5nX3RhYmxlKQpOX2dhbWVzIDwtIG5yb3coZ2FtZV9kYXRhKQpnYW1lX2RhdGEgPC0gZ2FtZV9kYXRhICU+JSBtdXRhdGUoYXdheV90ZWFtX2lkID0gdGVhbV9pZFsxOk5fZ2FtZXNdLCBob21lX3RlYW1faWQgPSB0ZWFtX2lkWyhOX2dhbWVzICsgMSk6KDIgKiBOX2dhbWVzKV0pCk5fZ2FtZXNfcGVyX3RlYW0gPC0gODIKbl9zaW1zIDwtIDQwMDAKCmBgYAoKRm9yIG5vdyB3ZSB3b24ndCBpbmNsdWRlIGdhbWVzIHRoYXQgd2VudCBpbnRvIG92ZXJ0aW1lLCBhcyB0aGVzZSBjb3VsZCBiZSBjb25zaWRlcmVkIGEgJ3RpZScuIFRoZXJlIHdlcmUgYSB0b3RhbCBvZiA3MCBnYW1lcyB0aGF0IHdlbnQgdG8gb3ZlcnRpbWUgaW4gdGhlIHJlZ3VsYXIgc2Vhc29uIG9mIDIwMTYvMjAxNy4KCmBgYHtyIHNldCB1cCBkYXRhIGZvciBTdGFufQpzdGFuX2RhdGEgPC0gbGlzdCgKICAgICAgICAgICAgICAgICAgICBOX2dhbWVzIDwtIE5fZ2FtZXMsCiAgICAgICAgICAgICAgICAgICAgTl90ZWFtcyA8LSBsZW5ndGgodGVhbV9tYXBwaW5nX3RhYmxlJHRlYW1faWQpLAogICAgICAgICAgICAgICAgICAgIGF3YXlfcG9pbnRzIDwtIGdhbWVfZGF0YSRwdHNfYXdheSwKICAgICAgICAgICAgICAgICAgICBob21lX3BvaW50cyA8LSBnYW1lX2RhdGEkcHRzX2hvbWUsCiAgICAgICAgICAgICAgICAgICAgb3ZlcnRpbWUgPC0gZ2FtZV9kYXRhJG92ZXJ0aW1lLAogICAgICAgICAgICAgICAgICAgIGF3YXlfdGVhbV9pZCA8LSBnYW1lX2RhdGEkYXdheV90ZWFtX2lkLAogICAgICAgICAgICAgICAgICAgIGhvbWVfdGVhbV9pZCA8LSBnYW1lX2RhdGEkaG9tZV90ZWFtX2lkCiAgICAgICAgICAgICAgICAgICkKYGBgCgpgYGB7ciBxdWljayBleHBsb3JhdGlvbiBvZiB0aGUgZGF0YX0KCmBgYAoKCmBgYHtyIGNvbXBpbGUgYW5kIGZpdCBiYXNlIFN0YW4gbW9kZWwsIGluY2x1ZGUgPSBGQUxTRX0Kc3Rhbl9tb2RlbF9iYXNlX2NvbXAgPC0gc3Rhbl9tb2RlbChmaWxlID0gIlN0YW5fbW9kZWxzL05CQV9iYXNlX21vZGVsX25vcm1hbC5zdGFuIikKCnN0YW5fZml0X2Jhc2UgPC0gc2FtcGxpbmcoc3Rhbl9tb2RlbF9iYXNlX2NvbXAsIGRhdGEgPSBzdGFuX2RhdGEsIGNoYWlucyA9IDQsIGl0ZXIgPSBuX3NpbXMpCmBgYAoKYGBge3IgYW5hbHl6ZSBiYXNlIFN0YW4gbW9kZWx9CnByaW50KHN0YW5fZml0X2Jhc2UsIHBhcnMgPSBjKCJ0ZWFtX3NraWxsIiwgInN0ZGV2IikpCmBgYAoKYGBge3IgY29tcGlsZSBhbmQgZml0IHdlYWsgcHJpb3Igbm9ybWFsIFN0YW4gbW9kZWwsIGluY2x1ZGUgPSBGQUxTRX0Kc3Rhbl9tb2RlbF9iYXNlX2NvbXAgPC0gc3Rhbl9tb2RlbChmaWxlID0gIlN0YW5fbW9kZWxzL05CQV9tb2RlbF9ub3JtYWxfd2Vha19wcmlvcnMuc3RhbiIpCgpzdGFuX2ZpdF9iYXNlIDwtIHNhbXBsaW5nKHN0YW5fbW9kZWxfYmFzZV9jb21wLCBkYXRhID0gc3Rhbl9kYXRhLCBjaGFpbnMgPSA0LCBpdGVyID0gbl9zaW1zKQpgYGAKCmBgYHtyIGFuYWx5emUgd2VhayBwcmlvciBub3JtYWwgU3RhbiBtb2RlbH0KcHJpbnQoc3Rhbl9maXRfYmFzZSwgcGFycyA9IGMoInRlYW1fc2tpbGwiLCAic3RkZXYiKSkKYGBgCgpgYGB7ciBjb21waWxlIGFuZCBmaXQgdCBTdGFuIG1vZGVsLCBpbmNsdWRlID0gRkFMU0V9CnN0YW5fbW9kZWxfYmFzZV9jb21wIDwtIHN0YW5fbW9kZWwoZmlsZSA9ICJTdGFuX21vZGVscy9OQkFfbW9kZWxfdC5zdGFuIikKCnN0YW5fZml0X2Jhc2UgPC0gc2FtcGxpbmcoc3Rhbl9tb2RlbF9iYXNlX2NvbXAsIGRhdGEgPSBzdGFuX2RhdGEsIGNoYWlucyA9IDQsIGl0ZXIgPSBuX3NpbXMpCmBgYAoKYGBge3IgYW5hbHl6ZSB0IFN0YW4gbW9kZWx9CnByaW50KHN0YW5fZml0X2Jhc2UsIHBhcnMgPSBjKCJ0ZWFtX3NraWxsIiwgInNjYWxlIiwgImRlZ19mcmVlIikpCmBgYAoKCmBgYHtyIGNvbXBpbGUgYW5kIGZpdCBTdGFuIG1vZGVsIHdpdGggaG9tZSBjb3VydCBhZHZhbnRhZ2UsIGluY2x1ZGUgPSBGQUxTRX0Kc3Rhbl9tb2RlbF9ob21lX2NvbXAgPC0gc3Rhbl9tb2RlbChmaWxlID0gIlN0YW5fbW9kZWxzL05CQV9tb2RlbF93aXRoX2hvbWVfY291cnQuc3RhbiIpCgpzdGFuX2ZpdF9ob21lIDwtIHNhbXBsaW5nKHN0YW5fbW9kZWxfaG9tZV9jb21wLCBkYXRhID0gc3Rhbl9kYXRhLCBjaGFpbnMgPSA0LCBpdGVyID0gbl9zaW1zKQpgYGAKCgpgYGB7ciBhbmFseXplIFN0YW4gbW9kZWwgd2l0aCBob21lIGNvdXJ0IGFkdmFudGFnZX0KcHJpbnQoc3Rhbl9maXRfaG9tZSwgcGFycyA9IGMoInRlYW1fc2tpbGwiLCAiaG9tZV9jb3VydF9hZHZhbnRhZ2UiLCAiZGVnX2ZyZWUiLCAic2NhbGUiKSkKYGBgCgo=</div>
 
 
 
