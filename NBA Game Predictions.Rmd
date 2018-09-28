@@ -1,0 +1,105 @@
+---
+title: "NBA Game Predictions"
+output: html_notebook
+---
+
+```{r load packages and further setup, message=FALSE, include=FALSE}
+library(tidyverse)
+library(rstan)
+library(bayesplot)
+
+theme_set(bayesplot::theme_default())
+
+options(mc.cores = parallel::detectCores())
+
+source("NBA_utilities.R")
+
+set.seed(12)
+```
+
+```{r load data and some data manipulation}
+game_data <- read_csv("NBA Game Data 20162017.csv")
+game_data <- game_data %>% 
+                select(date = Date, away_team = "Visitor/Neutral", home_team = "Home/Neutral", pts_away = PTS_A, pts_home = PTS_H, overtime = OT) %>%
+                mutate(score_diff = pts_away - pts_home,
+                       overtime = ifelse (is.na(overtime), 0, 
+                                          ifelse(stringr::str_length(overtime) == 2, 1, as.integer(substring(overtime, 1, 1)))))
+
+# create a single identifier used for both away and home teams
+unique_teams <- sort(unique(c(game_data$away_team, game_data$home_team)))
+team_mapping_table <- tibble(team_name = unique_teams, team_id = 1:length(unique_teams))
+
+lookup_team_id <- function(team_name_lookup, mapping_table) {
+  tmp_table <- filter(mapping_table, team_name == team_name_lookup)
+  if (nrow(tmp_table) != 1) {
+    stop(paste("lookup-rows should be equal to one but found", nrow(tmp_table), "instead"))
+  }
+  out <- tmp_table$team_id
+  out
+}
+
+team_id <- map_int(c(game_data$away_team, game_data$home_team), lookup_team_id, mapping_table = team_mapping_table)
+N_games <- nrow(game_data)
+game_data <- game_data %>% mutate(away_team_id = team_id[1:N_games], home_team_id = team_id[(N_games + 1):(2 * N_games)])
+N_games_per_team <- 82
+n_sims <- 4000
+
+```
+
+For now we won't include games that went into overtime, as these could be considered a 'tie'. There were a total of 70 games that went to overtime in the regular season of 2016/2017.
+
+```{r set up data for Stan}
+stan_data <- list(
+                    N_games <- N_games,
+                    N_teams <- length(team_mapping_table$team_id),
+                    away_points <- game_data$pts_away,
+                    home_points <- game_data$pts_home,
+                    overtime <- game_data$overtime,
+                    away_team_id <- game_data$away_team_id,
+                    home_team_id <- game_data$home_team_id
+                  )
+```
+
+
+```{r compile and fit base Stan model, include = FALSE}
+stan_model_base_comp <- stan_model(file = "Stan_models/NBA_base_model_normal.stan")
+
+stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, chains = 4, iter = n_sims)
+```
+
+```{r analyze base Stan model}
+print(stan_fit_base, pars = c("team_skill", "stdev"))
+```
+
+```{r compile and fit weak prior normal Stan model, include = FALSE}
+stan_model_base_comp <- stan_model(file = "Stan_models/NBA_model_normal_weak_priors.stan")
+
+stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, chains = 4, iter = n_sims)
+```
+
+```{r analyze weak prior normal Stan model}
+print(stan_fit_base, pars = c("team_skill", "stdev"))
+```
+
+```{r compile and fit t Stan model, include = FALSE}
+stan_model_base_comp <- stan_model(file = "Stan_models/NBA_model_t.stan")
+
+stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, chains = 4, iter = n_sims)
+```
+
+```{r analyze t Stan model}
+print(stan_fit_base, pars = c("team_skill", "scale", "deg_free"))
+```
+
+
+```{r compile and fit Stan model with home court advantage, include = FALSE}
+stan_model_home_comp <- stan_model(file = "Stan_models/NBA_model_with_home_court.stan")
+
+stan_fit_home <- sampling(stan_model_home_comp, data = stan_data, chains = 4, iter = n_sims)
+```
+
+
+```{r analyze Stan model with home court advantage}
+print(stan_fit_home, pars = c("team_skill", "home_court_advantage", "deg_free", "scale"))
+```
+
