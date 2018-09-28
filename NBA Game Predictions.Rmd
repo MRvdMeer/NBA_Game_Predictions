@@ -107,3 +107,14 @@ stan_fit_home <- sampling(stan_model_home_comp, data = stan_data, chains = 4, it
 print(stan_fit_home, pars = c("team_skill", "home_court_advantage", "deg_free", "scale"))
 ```
 
+```{r compile and fit Stan Poisson model, include = FALSE}
+stan_model_home_comp <- stan_model(file = "Stan_models/NBA_model_poisson.stan")
+
+stan_fit_home <- sampling(stan_model_home_comp, data = stan_data, chains = 4, iter = n_sims)
+```
+
+
+```{r analyze Stan Poisson model}
+print(stan_fit_home, pars = c("team_skill", "home_court_advantage", "deg_free", "scale"))
+```
+
