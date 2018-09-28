@@ -14,6 +14,7 @@ transformed data {
 parameters {
   // real<lower = 0> team_skill[N_teams];
   real<lower=0> team_skill[N_teams];
+  real home_court_advantage;
 }
 
 transformed parameters {
@@ -26,7 +27,7 @@ model {
   // likelihood
   for (n in 1:N_games){
     away_points[n] ~ poisson(team_skill[away_team_id[n]]);
-    home_points[n] ~ poisson(team_skill[home_team_id[n]]);
+    home_points[n] ~ poisson(team_skill[home_team_id[n]] + home_court_advantage);
   }
 }
 

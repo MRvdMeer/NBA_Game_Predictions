@@ -60,9 +60,39 @@ stan_data <- list(
                   )
 ```
 
-```{r quick exploration of the data}
+```{r quick summary of the data}
+mean(game_data$score_diff)
+sd(game_data$score_diff)
 
+mean(game_data$pts_away)
+var(game_data$pts_away)
+mean(game_data$pts_home)
+var(game_data$pts_home)
+
+summary(game_data)
 ```
+
+Here we see both the home and away points scored are a bit over-dispersed.
+
+```{r some quick plots}
+ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_density(color = "blue")
+
+ggplot(data = game_data) +
+  geom_density(mapping = aes(x = pts_away), color = "red") +
+  geom_density(mapping = aes(x = pts_home), color = "blue")
+```
+
+
+It appears the observed score difference is bimodal, and there appears to be some home-court advantage. We will use this in the model later.
+Also, the distribution of points scored seems relatively bell-shaped, with perhaps a bit more mass towards the tails than we would expect from a normal distribution.
+
+
+# Modeling the game outcomes
+
+
+### Model based on the Gelman Worldcup example
+
+First of all, we'll use a model based on [Andrew Gelman's World Cup example](https://andrewgelman.com/2014/07/15/stan-world-cup-update/). Here we model the score difference in a game using a symmetric distribution centered on the skill difference between the two teams.
 
 
 ```{r compile and fit base Stan model, include = FALSE}
@@ -106,6 +136,10 @@ stan_fit_home <- sampling(stan_model_home_comp, data = stan_data, chains = 4, it
 ```{r analyze Stan model with home court advantage}
 print(stan_fit_home, pars = c("team_skill", "home_court_advantage", "deg_free", "scale"))
 ```
+
+
+### Poisson model
+
 
 ```{r compile and fit Stan Poisson model, include = FALSE}
 stan_model_home_comp <- stan_model(file = "Stan_models/NBA_model_poisson.stan")
