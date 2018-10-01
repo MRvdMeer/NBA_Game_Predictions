@@ -1,8 +1,8 @@
 data {
   int<lower = 1> N_games;
   int< lower = 2> N_teams;
-  real<lower = 0> away_points[N_games];
-  real<lower = 0> home_points[N_games];
+  int<lower = 0> away_points[N_games];
+  int<lower = 0> home_points[N_games];
   int<lower = 0> overtime[N_games];
   int<lower = 1, upper = N_teams> away_team_id[N_games];
   int<lower = 1, upper = N_teams> home_team_id[N_games];
@@ -32,10 +32,12 @@ model {
 }
 
 generated quantities {
-  real away_score__rep[N_games];
+  real away_score_rep[N_games];
   real home_score_rep[N_games];
+  real score_difference_rep[N_games];
   for (n in 1:N_games) {
     away_score_rep[n] = poisson_rng(team_skill[away_team_id[n]]);
-    home_score_rep[n] = poisson_rng(team_skill[home_team_id[n]]);
+    home_score_rep[n] = poisson_rng(team_skill[home_team_id[n]]) + home_court_advantage;
+    score_difference_rep[n] = away_score_rep[n] - home_score_rep[n];
   }
 }

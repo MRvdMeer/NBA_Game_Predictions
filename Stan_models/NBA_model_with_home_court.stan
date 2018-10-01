@@ -23,7 +23,6 @@ parameters {
   // real<lower = 0> team_skill[N_teams];
   real team_skill[N_teams];
   real<lower = 0> scale;
-  real<lower = 0> deg_free;
   real home_court_advantage;
 }
 
@@ -36,18 +35,17 @@ transformed parameters {
 
 model {
   // priors
-  deg_free ~ gamma(2, 0.2);
   scale ~ normal(0, 1);
   team_skill ~ normal(0, 4);
   home_court_advantage ~ normal(0, 4);
   
   // likelihood
-  score_difference ~ student_t(deg_free, skill_difference - home_court_advantage, scale);
+  score_difference ~ normal(skill_difference - home_court_advantage, scale);
 }
 
 generated quantities {
   real score_difference_rep[N_games];
   for (n in 1:N_games) {
-    score_difference_rep[n] = student_t_rng(deg_free, skill_difference[n] - home_court_advantage, scale);
+    score_difference_rep[n] = normal_rng(skill_difference[n] - home_court_advantage, scale);
   }
 }

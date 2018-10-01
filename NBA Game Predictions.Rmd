@@ -21,9 +21,9 @@ set.seed(12)
 game_data <- read_csv("NBA Game Data 20162017.csv")
 game_data <- game_data %>% 
                 select(date = Date, away_team = "Visitor/Neutral", home_team = "Home/Neutral", pts_away = PTS_A, pts_home = PTS_H, overtime = OT) %>%
-                mutate(score_diff = pts_away - pts_home,
-                       overtime = ifelse (is.na(overtime), 0, 
-                                          ifelse(stringr::str_length(overtime) == 2, 1, as.integer(substring(overtime, 1, 1)))))
+                mutate(overtime = ifelse (is.na(overtime), 0L, 
+                                          ifelse(stringr::str_length(overtime) == 2, 1L, as.integer(substring(overtime, 1, 1)))),
+                       score_diff = ifelse(overtime == 0, pts_away - pts_home, 0L))
 
 # create a single identifier used for both away and home teams
 unique_teams <- sort(unique(c(game_data$away_team, game_data$home_team)))
@@ -61,13 +61,13 @@ stan_data <- list(
 ```
 
 ```{r quick summary of the data}
-mean(game_data$score_diff)
-sd(game_data$score_diff)
+paste("Average score difference:", round(mean(game_data$score_diff), 2))
+paste("Standard deviation of score difference:", round(sd(game_data$score_diff), 2))
 
-mean(game_data$pts_away)
-var(game_data$pts_away)
-mean(game_data$pts_home)
-var(game_data$pts_home)
+paste("Average points scored by away team:", round(mean(game_data$pts_away), 2))
+paste("Variance of away points:", round(var(game_data$pts_away), 2))
+paste("Average points scored by home team:", round(mean(game_data$pts_home), 2))
+paste("Variance of home points:", round(var(game_data$pts_home), 2))
 
 summary(game_data)
 ```
@@ -77,13 +77,13 @@ Here we see both the home and away points scored are a bit over-dispersed.
 ```{r some quick plots}
 ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_density(color = "blue")
 
-ggplot(data = game_data) +
-  geom_density(mapping = aes(x = pts_away), color = "red") +
-  geom_density(mapping = aes(x = pts_home), color = "blue")
+game_data %>%
+  gather(key = "away_home", value = "points", pts_away, pts_home) %>%
+  ggplot(aes(x = points, col = away_home)) + geom_density() + scale_color_manual(values = c("orange", "darkblue"))
 ```
 
 
-It appears the observed score difference is bimodal, and there appears to be some home-court advantage. We will use this in the model later.
+It appears the observed score difference seems to be bimodal, and there appears to be some home-court advantage (more negative score differences than positive). We will use this in the model later.
 Also, the distribution of points scored seems relatively bell-shaped, with perhaps a bit more mass towards the tails than we would expect from a normal distribution.
 
 
@@ -96,17 +96,20 @@ First of all, we'll use a model based on [Andrew Gelman's World Cup example](htt
 
 
 ```{r compile and fit base Stan model, include = FALSE}
-stan_model_base_comp <- stan_model(file = "Stan_models/NBA_base_model_normal.stan")
+stan_model_bad_comp <- stan_model(file = "Stan_models/NBA_base_model_normal.stan")
 
-stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, chains = 4, iter = n_sims)
+stan_fit_bad <- sampling(stan_model_bad_comp, data = stan_data, chains = 4, iter = n_sims)
 ```
 
 ```{r analyze base Stan model}
-print(stan_fit_base, pars = c("team_skill", "stdev"))
+print(stan_fit_bad, pars = c("team_skill", "stdev"))
 ```
 
+The base model shows a very bad fit. The reason is that the model is non-identifiable: since we only model the difference in points scored, we can add an arbitrary constant to home skill and away skill for all teams in the dataset and this will lead to the exact same inference. We'll quickly fix this by adding some weak priors.
+
+
 ```{r compile and fit weak prior normal Stan model, include = FALSE}
-stan_model_base_comp <- stan_model(file = "Stan_models/NBA_model_normal_weak_priors.stan")
+stan_model_base_comp <- stan_model(file = "Stan_models/NBA_base_model_normal_weak_priors.stan")
 
 stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, chains = 4, iter = n_sims)
 ```
@@ -115,15 +118,35 @@ stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, chains = 4, it
 print(stan_fit_base, pars = c("team_skill", "stdev"))
 ```
 
-```{r compile and fit t Stan model, include = FALSE}
-stan_model_base_comp <- stan_model(file = "Stan_models/NBA_model_t.stan")
+This looks much better - the convergence diagnostics show no problems now. We see the Golden State Warriors are the best team here and the Brooklyn Nets are the worst. This is not a surprise - these were the teams that won the most / least games, respectively. Let's see how well we re-predict the game data.
 
-stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, chains = 4, iter = n_sims)
+```{r posterior predictive check base model}
+y_rep_base <- as.matrix(stan_fit_base, pars = "score_difference_rep")
+
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_base[1:400, ])
+```
+
+
+The replicated datasets seem to re-predict the actual score differences reasonably well, although it seems that the actual data is a bit more skewed to the left (i.e. in favor of the home team). Perhaps the tails also don't work quite well. We'll try to tackle both of these next.
+
+
+```{r compile and fit t Stan model, include = FALSE}
+stan_model_t_comp <- stan_model(file = "Stan_models/NBA_model_t.stan")
+
+stan_fit_t <- sampling(stan_model_t_comp, data = stan_data, chains = 4, iter = n_sims)
 ```
 
 ```{r analyze t Stan model}
-print(stan_fit_base, pars = c("team_skill", "scale", "deg_free"))
+print(stan_fit_t, pars = c("team_skill", "scale", "deg_free"))
 ```
+
+```{r posterior predictive check t model}
+y_rep_t <- as.matrix(stan_fit_t, pars = "score_difference_rep")
+
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_t[1:400, ])
+```
+
+The t-model seems to have fatter tails than necessary for our purposes. For now we'll stick with the normal model.
 
 
 ```{r compile and fit Stan model with home court advantage, include = FALSE}
@@ -134,21 +157,48 @@ stan_fit_home <- sampling(stan_model_home_comp, data = stan_data, chains = 4, it
 
 
 ```{r analyze Stan model with home court advantage}
-print(stan_fit_home, pars = c("team_skill", "home_court_advantage", "deg_free", "scale"))
+print(stan_fit_home, pars = c("team_skill", "home_court_advantage", "scale"))
+```
+
+It seems home court advantage is worth roughly 3 points in the NBA.
+
+
+```{r posterior predictive check home court model}
+y_rep_home <- as.matrix(stan_fit_home, pars = "score_difference_rep")
+
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_home[1:400, ])
 ```
 
 
 ### Poisson model
 
+So far we have modeled the score difference only, but now we'll try to directly model the points scored by the home and away teams. First we'll try a Poisson model. We've seen earlier that the points scored seem slighly over-dispersed, so we'll keep that in mind here.
+
 
 ```{r compile and fit Stan Poisson model, include = FALSE}
-stan_model_home_comp <- stan_model(file = "Stan_models/NBA_model_poisson.stan")
+stan_model_poisson_comp <- stan_model(file = "Stan_models/NBA_model_poisson.stan")
 
-stan_fit_home <- sampling(stan_model_home_comp, data = stan_data, chains = 4, iter = n_sims)
+stan_fit_poisson <- sampling(stan_model_poisson_comp, data = stan_data, chains = 4, iter = n_sims)
 ```
 
 
 ```{r analyze Stan Poisson model}
-print(stan_fit_home, pars = c("team_skill", "home_court_advantage", "deg_free", "scale"))
+print(stan_fit_poisson, pars = c("team_skill", "home_court_advantage"))
 ```
+
+In this model home court advantage appears to be worth over 15 points per game! There seems to be something wrong here...
+
+```{r posterior predictive check Poisson model}
+y_rep_poisson <- as.matrix(stan_fit_poisson, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
+
+ppc_dens_overlay(y = game_data$pts_away, yrep = y_rep_poisson[1:400, 1:N_games])
+ppc_dens_overlay(y = game_data$pts_home, yrep = y_rep_poisson[1:400, (N_games + 1):(2 * N_games)])
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_poisson[1:400, (2 * N_games + 1):(3 * N_games)])
+```
+
+
+Interestingly, the away poins per game is significantly underestimated. This might be because of the over-dispersion we saw earlier. This also explains the estimated point-value of home court advantage - the model needs to make up for systematically underestimating the number of points scored. We'll see if we can use a negative binomial (i.e. gamma-poisson) model to counter this over-dispersion.
+
+
+
 
