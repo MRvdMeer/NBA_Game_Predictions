@@ -13,7 +13,7 @@ transformed data {
 
 parameters {
   real<lower=0> team_skill[N_teams];
-  real home_court_advantage;
+  real home_court_advantage[N_teams];
 }
 
 transformed parameters {
@@ -21,13 +21,13 @@ transformed parameters {
 
 model {
   // priors
-  team_skill ~ exponential(0.01);
-  home_court_advantage ~ normal(0, 4);
+  team_skill ~ exponential(0.1);
+  home_court_advantage ~ normal(0, 3);
 
   // likelihood
   for (n in 1:N_games){
     away_points[n] ~ poisson(team_skill[away_team_id[n]]);
-    home_points[n] ~ poisson(team_skill[home_team_id[n]] + home_court_advantage);
+    home_points[n] ~ poisson(team_skill[home_team_id[n]] + home_court_advantage[home_team_id[n]]);
   }
 }
 
@@ -37,7 +37,7 @@ generated quantities {
   int score_difference_rep[N_games];
   for (n in 1:N_games) {
     away_score_rep[n] = poisson_rng(team_skill[away_team_id[n]]);
-    home_score_rep[n] = poisson_rng(team_skill[home_team_id[n]] + home_court_advantage);
+    home_score_rep[n] = poisson_rng(team_skill[home_team_id[n]] + home_court_advantage[home_team_id[n]]);
     score_difference_rep[n] = away_score_rep[n] - home_score_rep[n];
   }
 }
