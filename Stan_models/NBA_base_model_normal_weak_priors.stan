@@ -20,7 +20,6 @@ transformed data {
 }
 
 parameters {
-  // real<lower = 0> team_skill[N_teams];
   real team_skill[N_teams];
   real<lower = 0> stdev;
 }

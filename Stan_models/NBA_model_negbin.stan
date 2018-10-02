@@ -1,17 +1,3 @@
-functions {
-  /*
-  * Alternative to neg_binomial_2_log_rng() that 
-  * avoids potential numerical problems during warmup
-  */
-  int neg_binomial_2_log_safe_rng(real eta, real phi) {
-    real gamma_rate = gamma_rng(phi, phi / exp(eta));
-    if (gamma_rate >= exp(20.79))
-      return -9;
-      
-    return poisson_rng(gamma_rate);
-  }
-}
-
 data {
   int<lower = 1> N_games;
   int< lower = 2> N_teams;
@@ -51,8 +37,8 @@ generated quantities {
   int home_score_rep[N_games];
   int score_difference_rep[N_games];
   for (n in 1:N_games) {
-    away_score_rep[n] = neg_binomial_2_log_safe_rng(team_skill[away_team_id[n]], phi);
-    home_score_rep[n] = neg_binomial_2_log_safe_rng(team_skill[home_team_id[n]], phi) + home_court_advantage;
+    away_score_rep[n] = neg_binomial_2_rng(team_skill[away_team_id[n]], phi);
+    home_score_rep[n] = neg_binomial_2_rng(team_skill[home_team_id[n]] + home_court_advantage, phi);
     score_difference_rep[n] = away_score_rep[n] - home_score_rep[n];
   }
 }

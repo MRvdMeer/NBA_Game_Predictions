@@ -200,5 +200,34 @@ ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_poisson[1:400, (2 * N_ga
 Interestingly, the away poins per game is significantly underestimated. This might be because of the over-dispersion we saw earlier. This also explains the estimated point-value of home court advantage - the model needs to make up for systematically underestimating the number of points scored. We'll see if we can use a negative binomial (i.e. gamma-poisson) model to counter this over-dispersion.
 
 
+```{r compile and fit Stan Negative Binomial model, include = FALSE}
+stan_model_negbin_comp <- stan_model(file = "Stan_models/NBA_model_negbin.stan")
 
+stan_fit_negbin <- sampling(stan_model_negbin_comp, data = stan_data, chains = 4, iter = n_sims)
+```
+
+
+```{r analyze Stan Negative Binomial model}
+print(stan_fit_negbin, pars = c("team_skill", "home_court_advantage", "phi"))
+```
+
+
+```{r posterior predictive check Negative Binomial model}
+y_rep_negbin <- as.matrix(stan_fit_negbin, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
+
+ppc_dens_overlay(y = game_data$pts_away, yrep = y_rep_negbin[1:400, 1:N_games])
+ppc_dens_overlay(y = game_data$pts_home, yrep = y_rep_negbin[1:400, (N_games + 1):(2 * N_games)])
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_negbin[1:400, (2 * N_games + 1):(3 * N_games)])
+```
+
+
+### Time-series structure
+
+So far we have only fit the model on the entire season at once. Another approach would be to allow the skill of the teams to vary over time.
+
+
+# Predicting new games
+
+
+So far we have checked the model by seeing how well it re-creates the original data through simulations. Another way to check is to fit the model on part of the data and see if you can predict the outcomes of other games. Because of the time-series nature of the data we will only fit the model on sequential data and then predict on newer data.
 
