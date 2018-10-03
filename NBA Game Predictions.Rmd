@@ -50,13 +50,13 @@ For now we won't include games that went into overtime, as these could be consid
 
 ```{r set up data for Stan}
 stan_data <- list(
-                    N_games <- N_games,
-                    N_teams <- length(team_mapping_table$team_id),
-                    away_points <- game_data$pts_away,
-                    home_points <- game_data$pts_home,
-                    overtime <- game_data$overtime,
-                    away_team_id <- game_data$away_team_id,
-                    home_team_id <- game_data$home_team_id
+                    N_games = N_games,
+                    N_teams = length(team_mapping_table$team_id),
+                    away_points = game_data$pts_away,
+                    home_points = game_data$pts_home,
+                    overtime = game_data$overtime,
+                    away_team_id = game_data$away_team_id,
+                    home_team_id = game_data$home_team_id
                   )
 ```
 
@@ -99,7 +99,7 @@ First of all, we'll use a model based on [Andrew Gelman's World Cup example](htt
 ```{r compile and fit base Stan model, include = FALSE}
 stan_model_bad_comp <- stan_model(file = "Stan_models/NBA_base_model_normal.stan")
 
-stan_fit_bad <- sampling(stan_model_bad_comp, data = stan_data, chains = 4, iter = n_sims)
+stan_fit_bad <- sampling(stan_model_bad_comp, data = stan_data, iter = n_sims)
 ```
 
 ```{r analyze base Stan model}
@@ -112,7 +112,7 @@ The base model shows a very bad fit. The reason is that the model is non-identif
 ```{r compile and fit weak prior normal Stan model, include = FALSE}
 stan_model_base_comp <- stan_model(file = "Stan_models/NBA_base_model_normal_weak_priors.stan")
 
-stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, chains = 4, iter = n_sims)
+stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, iter = n_sims)
 ```
 
 ```{r analyze weak prior normal Stan model}
@@ -134,7 +134,7 @@ The replicated datasets seem to re-predict the actual score differences reasonab
 ```{r compile and fit t Stan model, include = FALSE}
 stan_model_t_comp <- stan_model(file = "Stan_models/NBA_model_t.stan")
 
-stan_fit_t <- sampling(stan_model_t_comp, data = stan_data, chains = 4, iter = n_sims)
+stan_fit_t <- sampling(stan_model_t_comp, data = stan_data, iter = n_sims)
 ```
 
 ```{r analyze t Stan model}
@@ -151,9 +151,9 @@ The t-model seems to have fatter tails than necessary for our purposes. For now 
 
 
 ```{r compile and fit Stan model with home court advantage, include = FALSE}
-stan_model_home_comp <- stan_model(file = "Stan_models/NBA_model_with_home_court.stan")
+stan_model_home_comp <- stan_model(file = "Stan_models/NBA_model_normal_home.stan")
 
-stan_fit_home <- sampling(stan_model_home_comp, data = stan_data, chains = 4, iter = n_sims)
+stan_fit_home <- sampling(stan_model_home_comp, data = stan_data, iter = n_sims)
 ```
 
 
@@ -179,7 +179,7 @@ So far we have modeled the score difference only, but now we'll try to directly 
 ```{r compile and fit Stan Poisson model, include = FALSE}
 stan_model_poisson_comp <- stan_model(file = "Stan_models/NBA_model_poisson.stan")
 
-stan_fit_poisson <- sampling(stan_model_poisson_comp, data = stan_data, chains = 4, iter = n_sims)
+stan_fit_poisson <- sampling(stan_model_poisson_comp, data = stan_data, iter = n_sims)
 ```
 
 
@@ -202,7 +202,7 @@ The Poisson model predicts the points scored quite well, and as a result the dif
 ```{r compile and fit Stan Negative Binomial model, include = FALSE}
 stan_model_negbin_comp <- stan_model(file = "Stan_models/NBA_model_negbin.stan")
 
-stan_fit_negbin <- sampling(stan_model_negbin_comp, data = stan_data, chains = 4, iter = n_sims)
+stan_fit_negbin <- sampling(stan_model_negbin_comp, data = stan_data, iter = n_sims)
 ```
 
 
@@ -219,7 +219,7 @@ ppc_dens_overlay(y = game_data$pts_home, yrep = y_rep_negbin[1:400, (N_games + 1
 ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_negbin[1:400, (2 * N_games + 1):(3 * N_games)])
 ```
 
-It's difficult to say whether this fit is better than the Poisson model. While the points scored seem to fit even better, the difference in points scored seems to be too high. This model predicts a bigger probability for very extreme outcomes.
+It's difficult to say whether this fit is better than the Poisson model. While the points scored seem to fit even better, the difference in points scored seems to be a worse fit. This model predicts a bigger probability for very extreme outcomes.
 
 Instead of continuing along the Negative Binomial path, we'll try to modify the Poisson model. A reason why we may miss some variation is that different teams might have different levels of home-court advantage. Maybe we just need a home court advantage vector in addition to the skill vector.
 
@@ -227,7 +227,7 @@ Instead of continuing along the Negative Binomial path, we'll try to modify the 
 ```{r compile and fit Stan Poisson Home Vector model, include = FALSE}
 stan_model_poisson_hv_comp <- stan_model(file = "Stan_models/NBA_model_poisson_home_vector.stan")
 
-stan_fit_poisson_hv <- sampling(stan_model_poisson_hv_comp, data = stan_data, chains = 4, iter = n_sims, 
+stan_fit_poisson_hv <- sampling(stan_model_poisson_hv_comp, data = stan_data, iter = n_sims, 
                                 # specifying initial values because they get rejected otherwise
                                 init = list(list(home_court_advantage = rep(0, N_teams)),
                                             list(home_court_advantage = rep(1, N_teams)),
@@ -255,7 +255,55 @@ ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_poisson_hv[1:400, (2 * N
 
 ### Time-series structure
 
-So far we have only fit the model on the entire season at once. Another approach would be to allow the skill of the teams to vary over time.
+So far we have only fit the model on the entire season at once. Another approach would be to allow the skill of the teams to vary over time. We'll revisit the simpler normal model for score differences with home court, but now we'll update our estimate of the teams' skill parameters after each game.
+
+
+```{r set up data for Stan time series model}
+stan_data_ts <- list(
+                    N_games = N_games,
+                    N_teams = length(team_mapping_table$team_id),
+                    away_points = game_data$pts_away,
+                    home_points = game_data$pts_home,
+                    overtime = game_data$overtime,
+                    away_team_id = game_data$away_team_id,
+                    home_team_id = game_data$home_team_id,
+                    N_games_per_team = N_games_per_team
+                  )
+
+n_sims <- 10000
+```
+
+
+```{r compile and fit Stan time-series model, include = FALSE}
+stan_model_time_comp <- stan_model(file = "Stan_models/NBA_model_timeseries.stan")
+
+stan_fit_time <- sampling(stan_model_time_comp, data = stan_data_ts, iter = n_sims,
+                          control = list(max_treedepth = 15))
+```
+
+
+```{r analyze Stan time-series model}
+print(stan_fit_time, pars = c("home_court_advantage", "score_scale", "init_scale", "update_scale"))
+
+check_hmc_diagnostics(stan_fit_time)
+```
+
+
+```{r posterior predictive check time-series model}
+y_rep_time <- as.matrix(stan_fit_time, pars = "score_difference_rep")
+
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_time[1:400, ])
+```
+
+The number of effective samples for update_scale is relatively low, but other than that the fit seems to be quite good.
+
+
+```{r inferring skill over time}
+team_skill <- extract(stan_fit_time, pars = "team_skill", permuted = TRUE)
+
+
+```
+
 
 
 # Predicting new games
