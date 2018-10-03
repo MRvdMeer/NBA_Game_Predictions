@@ -21,26 +21,32 @@ transformed data {
 }
 
 parameters {
-  team_skill[N_teams, N_games_per_team];
+  real team_skill[N_teams, N_games_per_team];
   real<lower = 0> scale;
   real home_court_advantage;
 }
 
 transformed parameters {
-  vector[N_games] skill_difference;
-  for (n in 1:N_games){
-    skill_difference[n] = team_skill[away_team_id[n]] - team_skill[home_team_id[n]];
-  }
 }
 
 model {
+  vector[N_games] skill_difference;
   int position[N_teams];
   position = rep_array(0, N_teams);
+  
+  for (n in 1:N_games){ //loop over games
+    // update game position for playing teams
+    position[away_team_id[n]] += 1;
+    position[home_team_id[n]] += 1;
+    // then find skill difference
+    skill_difference[n] = team_skill[away_team_id[n], position[away_team_id[n]]]
+    - team_skill[home_team_id[n], position[home_team_id[n]]];
+  }
+  
   // priors
-  deg_free ~ gamma(2, 0.2);
   scale ~ normal(0, 1);
-  team_skill ~ normal(0, 4);
-  home_court_advantage ~ normal(0, 4);
+  team_skill[1,:] ~ normal(0, 4);
+  home_court_advantage ~ normal(0, 3);
   
   // likelihood
   score_difference ~ normal(skill_difference - home_court_advantage, scale);
