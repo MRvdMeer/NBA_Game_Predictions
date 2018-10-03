@@ -297,6 +297,8 @@ ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_time[1:400, ])
 
 The number of effective samples for update_scale is relatively low, but other than that the fit seems to be quite good.
 
+Now let's see how team skills evolve over time.
+
 
 ```{r inferring skill over time}
 team_skill <- extract(stan_fit_time, pars = "team_skill", permuted = TRUE)
@@ -311,3 +313,11 @@ team_skill <- extract(stan_fit_time, pars = "team_skill", permuted = TRUE)
 
 So far we have checked the model by seeing how well it re-creates the original data through simulations. Another way to check is to fit the model on part of the data and see if you can predict the outcomes of other games. Because of the time-series nature of the data we will only fit the model on sequential data and then predict on newer data.
 
+
+
+
+```{r additional data manipulation for predictions}
+
+
+
+```
