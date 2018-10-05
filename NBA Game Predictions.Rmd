@@ -288,6 +288,11 @@ print(stan_fit_time, pars = c("home_court_advantage", "score_scale", "init_scale
 check_hmc_diagnostics(stan_fit_time)
 ```
 
+```{r further analyze Stan time-series model}
+# options(max.print = 99999)
+print(stan_fit_time, pars = "team_skill")
+# options(max.print = 1000)
+```
 
 ```{r posterior predictive check time-series model}
 y_rep_time <- as.matrix(stan_fit_time, pars = "score_difference_rep")
@@ -295,13 +300,40 @@ y_rep_time <- as.matrix(stan_fit_time, pars = "score_difference_rep")
 ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_time[1:400, ])
 ```
 
-The number of effective samples for update_scale is relatively low, but other than that the fit seems to be quite good.
+The number of effective samples for update_scale is relatively low, but other than that the fit seems to be quite good. Even the team skill parameters (as far as we can see)
 
 Now let's see how team skills evolve over time.
 
 
-```{r inferring skill over time}
+```{r extract skill over time}
 team_skill <- extract(stan_fit_time, pars = "team_skill", permuted = TRUE)
+team_skill <- team_skill[[1]]
+mean_skill <- apply(team_skill, c(2, 3), mean) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
+median_skill <- apply(team_skill, c(2, 3), median) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
+upper_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.96)) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
+lower_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.04)) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
+```
+
+```{r analyze skill over time}
+mean_skill <- mean_skill %>% gather(key = "game", value = "skill", -team_name) %>%
+  mutate(game_number = as.numeric(substring(game, first = 2)))
+
+mean_skill %>% group_by(team_name) %>% 
+  summarize(mean_skill = mean(skill),
+            median_skill = median(skill),
+            max_skill = max(skill),
+            min_skill = min(skill)) %>%
+  arrange(desc(mean_skill)) %>% print(n = 30, digits = 2) -> ranked_teams
+
+mean_skill %>% filter(team_name %in% ranked_teams$team_name[1:6]) %>% 
+  ggplot(mapping = aes(x = game_number, y = skill, color = team_name)) +
+  geom_line() + scale_color_brewer(type = "qual", palette = 3) +
+  ggtitle("Top Teams in 2016-2017")
+
+mean_skill %>% filter(team_name %in% ranked_teams$team_name[25:30]) %>% 
+  ggplot(mapping = aes(x = game_number, y = skill, color = team_name)) +
+  geom_line() + scale_color_brewer(type = "qual", palette = 3) +
+  ggtitle("Bottom Teams in 2016-2017")
 
 
 ```
@@ -317,6 +349,7 @@ So far we have checked the model by seeing how well it re-creates the original d
 
 
 ```{r additional data manipulation for predictions}
+#game_data_pred <- lookup_amount_games_played(game_data, team_mapping_table, N_games_per_team)
 
 
 

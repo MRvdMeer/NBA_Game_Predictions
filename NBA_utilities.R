@@ -8,16 +8,6 @@ lookup_team_id <- function(team_name_lookup, mapping_table) {
   out
 }
 
-wrangle_team_skills <- function(data_matrix, ...) {
-  # returns a data frame with one column that indicates team 
-  # and then one column for each game played
-  dimensions <- dim(data_matrix)
-  
-  skill_matrix <- matrix(0, nrow = N_teams, ncol = N_games_per_team)
-  
-  NULL
-}
-
 lookup_amount_games_played <- function(game_data, team_mapping_table, N_games_per_team) {
   # generates two columns (for away and home) that keep
   # track of how many games each team has already played
@@ -38,6 +28,7 @@ lookup_amount_games_played <- function(game_data, team_mapping_table, N_games_pe
     home_team_amount_played[n] <- sum(tmp[home_id, 1:n]) - 1
   }
   
-  data.frame(away_played = away_team_amount_played,
-             home_played = home_team_amount_played)
+  out <- game_data %>% mutate(away_played = away_team_amount_played,
+                              home_played <- home_team_amount_played)
 }
+
