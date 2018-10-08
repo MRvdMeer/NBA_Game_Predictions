@@ -40,30 +40,17 @@ lookup_team_id <- function(team_name_lookup, mapping_table) {
 
 team_id <- map_int(c(game_data$away_team, game_data$home_team), lookup_team_id, mapping_table = team_mapping_table)
 N_games <- nrow(game_data)
+N_teams = length(team_mapping_table$team_id)
 game_data <- game_data %>% mutate(away_team_id = team_id[1:N_games], home_team_id = team_id[(N_games + 1):(2 * N_games)])
 N_games_per_team <- 82
 n_sims <- 4000
 
 ```
 
-For now we won't include games that went into overtime, as these could be considered a 'tie'. There were a total of 70 games that went to overtime in the regular season of 2016/2017.
-
-```{r set up data for Stan}
-stan_data <- list(
-                    N_games = N_games,
-                    N_teams = length(team_mapping_table$team_id),
-                    away_points = game_data$pts_away,
-                    home_points = game_data$pts_home,
-                    overtime = game_data$overtime,
-                    away_team_id = game_data$away_team_id,
-                    home_team_id = game_data$home_team_id
-                  )
-```
-
-
 ```{r quick summary of the data}
 paste("Average score difference:", round(mean(game_data$score_diff), 2))
 paste("Standard deviation of score difference:", round(sd(game_data$score_diff), 2))
+paste("Number of overtime games:", round(sum(game_data$score_diff == 0), 2))
 
 paste("Average points scored by away team:", round(mean(game_data$pts_away), 2))
 paste("Variance of away points:", round(var(game_data$pts_away), 2))
@@ -86,6 +73,26 @@ game_data %>%
 
 It appears the observed score difference seems to be bimodal, and there appears to be some home-court advantage (more negative score differences than positive). We will use this in the model later.
 Also, the distribution of points scored seems relatively bell-shaped, with perhaps a bit more mass towards the tails than we would expect from a normal distribution.
+
+
+```{r set up data for Stan}
+stan_data <- list(
+                    N_games = N_games,
+                    N_teams = N_teams,
+                    away_points = game_data$pts_away,
+                    home_points = game_data$pts_home,
+                    overtime = game_data$overtime,
+                    away_team_id = game_data$away_team_id,
+                    home_team_id = game_data$home_team_id
+                  )
+```
+
+
+
+
+
+
+
 
 
 # Modeling the game outcomes
@@ -147,7 +154,7 @@ y_rep_t <- as.matrix(stan_fit_t, pars = "score_difference_rep")
 ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_t[1:400, ])
 ```
 
-The t-model seems to have fatter tails than necessary for our purposes. For now we'll stick with the normal model.
+The t-model seems to have fatter tails than necessary for our purposes. For now we'll stick with the normal model. A next potential improvement is to allow for home court advantage.
 
 
 ```{r compile and fit Stan model with home court advantage, include = FALSE}
@@ -169,6 +176,31 @@ y_rep_home <- as.matrix(stan_fit_home, pars = "score_difference_rep")
 
 ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_home[1:400, ])
 ```
+
+
+One more thing we can try is to allow each team to have a different home court advantage. This makes sense because some teams play at a high altitute or might have other factors that make it particularly difficult for visiting teams to play well.
+
+
+```{r compile and fit normal model with home vector, include = FALSE}
+stan_model_hv_comp <- stan_model(file = "Stan_models/NBA_model_normal_home_vector.stan")
+
+stan_fit_hv <- sampling(stan_model_hv_comp, data = stan_data, iter = n_sims)
+```
+
+
+```{r analyze normal model with home vector}
+print(stan_fit_hv, pars = c("team_skill", "scale", "mu_home", "sigma_home", "home_court_advantage"))
+```
+
+It actually appears there is very little variation in home court advantage for the different teams. In fact, Denver seems to have less home court advantage than most teams!
+
+
+```{r posterior predictive check normal home vector model}
+y_rep_hv <- as.matrix(stan_fit_hv, pars = "score_difference_rep")
+
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_hv[1:400, ])
+```
+
 
 
 ### Count models for the individual team scores
@@ -318,12 +350,14 @@ lower_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.04)) %>% as.tibbl
 mean_skill <- mean_skill %>% gather(key = "game", value = "skill", -team_name) %>%
   mutate(game_number = as.numeric(substring(game, first = 2)))
 
-mean_skill %>% group_by(team_name) %>% 
+ ranked_teams <- mean_skill %>% group_by(team_name) %>% 
   summarize(mean_skill = mean(skill),
             median_skill = median(skill),
             max_skill = max(skill),
             min_skill = min(skill)) %>%
-  arrange(desc(mean_skill)) %>% print(n = 30, digits = 2) -> ranked_teams
+  arrange(desc(mean_skill))
+ 
+print(ranked_teams, n = 30, digits = 2)
 
 mean_skill %>% filter(team_name %in% ranked_teams$team_name[1:6]) %>% 
   ggplot(mapping = aes(x = game_number, y = skill, color = team_name)) +

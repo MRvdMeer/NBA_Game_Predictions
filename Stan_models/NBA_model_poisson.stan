@@ -25,7 +25,7 @@ model {
   home_court_advantage ~ normal(0, 4);
 
   // likelihood
-  for (n in 1:N_games){
+  for (n in 1:N_games) {
     away_points[n] ~ poisson(team_skill[away_team_id[n]]);
     home_points[n] ~ poisson(team_skill[home_team_id[n]] + home_court_advantage);
   }

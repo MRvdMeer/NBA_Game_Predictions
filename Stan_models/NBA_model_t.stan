@@ -27,7 +27,7 @@ parameters {
 
 transformed parameters {
   vector[N_games] skill_difference;
-  for (n in 1:N_games){
+  for (n in 1:N_games) {
     skill_difference[n] = team_skill[away_team_id[n]] - team_skill[home_team_id[n]];
   }
 }

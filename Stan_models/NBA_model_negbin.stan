@@ -28,7 +28,7 @@ model {
   inv_precision ~ normal(0, 1);
 
   // likelihood
-  for (n in 1:N_games){
+  for (n in 1:N_games) {
     away_points[n] ~ neg_binomial_2(team_skill[away_team_id[n]], precision);
     home_points[n] ~ neg_binomial_2(team_skill[home_team_id[n]] + home_court_advantage, precision);
   }

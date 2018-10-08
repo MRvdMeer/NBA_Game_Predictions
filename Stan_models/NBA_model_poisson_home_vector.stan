@@ -12,20 +12,29 @@ transformed data {
 }
 
 parameters {
-  real<lower=0> team_skill[N_teams];
-  real home_court_advantage[N_teams];
+  real<lower = 0> team_skill[N_teams];
+  real home_court_advantage_raw[N_teams];
+  real mu_home;
+  real<lower = 0> sigma_home;
 }
 
 transformed parameters {
+  real home_court_advantage[N_teams];
+  // non-centered parametrization for hierarchical prior
+  for (n in 1:N_teams) {
+    home_court_advantage[n] = mu_home + home_court_advantage_raw[n] * sigma_home;
+  }
 }
 
 model {
   // priors
   team_skill ~ exponential(0.1);
-  home_court_advantage ~ normal(0, 3);
+  home_court_advantage_raw ~ normal(0, 1);
+  mu_home ~ normal(0, 3);
+  sigma_home ~ normal(0, 3);
 
   // likelihood
-  for (n in 1:N_games){
+  for (n in 1:N_games) {
     away_points[n] ~ poisson(team_skill[away_team_id[n]]);
     home_points[n] ~ poisson(team_skill[home_team_id[n]] + home_court_advantage[home_team_id[n]]);
   }
