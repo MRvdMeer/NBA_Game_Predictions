@@ -3,6 +3,8 @@ title: "NBA Game Predictions"
 output: html_notebook
 ---
 
+# Initial setup
+
 ```{r load packages and further setup, message=FALSE, include=FALSE}
 library(tidyverse)
 library(rstan)
@@ -28,15 +30,6 @@ game_data <- game_data %>%
 # create a single identifier used for both away and home teams
 unique_teams <- sort(unique(c(game_data$away_team, game_data$home_team)))
 team_mapping_table <- tibble(team_name = unique_teams, team_id = 1:length(unique_teams))
-
-lookup_team_id <- function(team_name_lookup, mapping_table) {
-  tmp_table <- filter(mapping_table, team_name == team_name_lookup)
-  if (nrow(tmp_table) != 1) {
-    stop(paste("lookup-rows should be equal to one but found", nrow(tmp_table), "instead"))
-  }
-  out <- tmp_table$team_id
-  out
-}
 
 team_id <- map_int(c(game_data$away_team, game_data$home_team), lookup_team_id, mapping_table = team_mapping_table)
 N_games <- nrow(game_data)
@@ -68,11 +61,19 @@ ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_density(color = "
 game_data %>%
   gather(key = "away_home", value = "points", pts_away, pts_home) %>%
   ggplot(aes(x = points, col = away_home)) + geom_density() + scale_color_manual(values = c("orange", "darkblue"))
+
+ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_histogram(binwidth = 1, fill = "blue", color = "black")
+
+game_data %>%
+  gather(key = "away_home", value = "points", pts_away, pts_home) %>%
+  ggplot(aes(x = points, col = away_home, fill = away_home)) + geom_histogram(binwidth = 1) + scale_fill_manual(values = c("orange", "darkblue")) + facet_wrap("away_home")
+
 ```
 
 
 It appears the observed score difference seems to be bimodal, and there appears to be some home-court advantage (more negative score differences than positive). We will use this in the model later.
 Also, the distribution of points scored seems relatively bell-shaped, with perhaps a bit more mass towards the tails than we would expect from a normal distribution.
+Finally, the distribution shows that overtime games are more frequent than might be expected by pure chance.
 
 
 ```{r set up data for Stan}
@@ -86,12 +87,6 @@ stan_data <- list(
                     home_team_id = game_data$home_team_id
                   )
 ```
-
-
-
-
-
-
 
 
 
