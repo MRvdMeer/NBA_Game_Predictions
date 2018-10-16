@@ -1,3 +1,6 @@
+// Need to update:
+// model everything on log scale so sampling doesn't need
+// artificial initial values
 data {
   int<lower = 1> N_games;
   int< lower = 2> N_teams;
@@ -9,11 +12,15 @@ data {
 }
 
 transformed data {
+  real minutes[N_games];
+  for (n in 1:N_games){
+    minutes[n] = 48.0 + 5.0 * overtime[n];
+  }
 }
 
 parameters {
-  real<lower = 0> team_skill[N_teams];
-  real home_court_advantage_raw[N_teams];
+  real<lower = 0> team_skill[N_teams]; // scoring ability per minute
+  real home_court_advantage_raw[N_teams]; // still on a per game scale
   real mu_home;
   real<lower = 0> sigma_home;
 }
@@ -28,15 +35,15 @@ transformed parameters {
 
 model {
   // priors
-  team_skill ~ exponential(0.01);
+  team_skill ~ exponential(0.5); // we expect roughly 2 points per minute
   home_court_advantage_raw ~ normal(0, 1);
   mu_home ~ normal(0, 3);
   sigma_home ~ normal(0, 3);
 
   // likelihood
   for (n in 1:N_games) {
-    away_points[n] ~ poisson(team_skill[away_team_id[n]]);
-    home_points[n] ~ poisson(team_skill[home_team_id[n]] + home_court_advantage[home_team_id[n]]);
+    away_points[n] ~ poisson(minutes[n] * team_skill[away_team_id[n]]);
+    home_points[n] ~ poisson((minutes[n] * team_skill[home_team_id[n]]) + home_court_advantage[home_team_id[n]]);
   }
 }
 
@@ -45,8 +52,8 @@ generated quantities {
   int home_score_rep[N_games];
   int score_difference_rep[N_games];
   for (n in 1:N_games) {
-    away_score_rep[n] = poisson_rng(team_skill[away_team_id[n]]);
-    home_score_rep[n] = poisson_rng(team_skill[home_team_id[n]] + home_court_advantage[home_team_id[n]]);
+    away_score_rep[n] = poisson_rng(minutes[n] * team_skill[away_team_id[n]]);
+    home_score_rep[n] = poisson_rng(minutes[n] * team_skill[home_team_id[n]] + home_court_advantage[home_team_id[n]]);
     score_difference_rep[n] = away_score_rep[n] - home_score_rep[n];
   }
 }

@@ -30,18 +30,22 @@ transformed data {
 }
 
 parameters {
-  real team_skill_raw[N_teams, N_games_per_team]; // for non-centered parametrization
+  real<lower = 0> team_skill_raw[N_teams, N_games_per_team]; // for non-centered parametrization
   real<lower = 0> score_scale;
   real<lower = 0> init_scale;
   real<lower = 0> update_scale;
-  real home_court_advantage;
+  real home_court_advantage_raw[N_teams];
+  real mu_home;
+  real<lower = 0> sigma_home;
 }
 
 transformed parameters {
+  real home_court_advantage[N_teams];
   real team_skill[N_teams, N_games_per_team];
-  vector[N_games] skill_difference;
   
+  // non-centered parametrization for hierarchical prior of home court advantage
   for (n in 1:N_teams) {
+    home_court_advantage[n] = mu_home + home_court_advantage_raw[n] * sigma_home;
     team_skill[n, 1] = init_scale * team_skill_raw[n, 1];
     for (i in 2:N_games_per_team) {
       team_skill[n, i] = team_skill[n, i - 1] + update_scale * team_skill_raw[n, i];
@@ -61,7 +65,9 @@ model {
   score_scale ~ normal(0, 1);
   init_scale ~ normal(0,1);
   update_scale ~ normal(0, 1);
-  home_court_advantage ~ normal(0, 3);
+  home_court_advantage_raw ~ normal(mu_home, sigma_home);
+  mu_home ~ normal(0, 1);
+  sigma_home ~ normal(0, 1);
   
   for (n in 1:N_teams) {
     //for (i in 1:N_games_per_team) {
@@ -70,7 +76,8 @@ model {
   }
   
   // likelihood
-  score_difference ~ normal(skill_difference - home_court_advantage, score_scale);
+  away_points ~ poisson();
+  home_points ~ poisson();
 }
 
 generated quantities {
