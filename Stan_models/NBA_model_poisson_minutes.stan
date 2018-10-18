@@ -14,12 +14,12 @@ data {
 transformed data {
   real minutes[N_games];
   for (n in 1:N_games){
-    minutes[n] = 48.0 + 5.0 * overtime[n];
+    minutes[n] = (48.0 + 5.0 * overtime[n]) / 48.0; // on a per-48-minutes scale
   }
 }
 
 parameters {
-  real<lower = 0> team_skill[N_teams]; // scoring ability per minute
+  real<lower = 0> team_skill[N_teams]; // scoring ability per 48 minutes
   real home_court_advantage_raw[N_teams]; // still on a per game scale
   real mu_home;
   real<lower = 0> sigma_home;
@@ -35,7 +35,7 @@ transformed parameters {
 
 model {
   // priors
-  team_skill ~ exponential(0.5); // we expect roughly 2 points per minute
+  team_skill ~ exponential(0.01); // we expect roughly 100 points per 48 minutes
   home_court_advantage_raw ~ normal(0, 1);
   mu_home ~ normal(0, 3);
   sigma_home ~ normal(0, 3);

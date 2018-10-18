@@ -247,7 +247,7 @@ Finally, we might introduce separate parameters for offensive and defensive skil
 ```{r compile and fit Stan Poisson Home Vector model, include = FALSE}
 stan_model_poisson_hv_comp <- stan_model(file = "Stan_models/NBA_model_poisson_home_vector.stan")
 
-stan_fit_poisson_hv <- sampling(stan_model_poisson_hv_comp, data = stan_data, iter = n_sims, 
+stan_fit_poisson_hv <- sampling(stan_model_poisson_hv_comp, data = stan_data, iter = n_sims, chains = 4,
                                 # specifying initial values because they get rejected otherwise
                                 # this SHOULD be fixed by modeling on the log-scale
                                 # but we're lazy right now and won't change the model.
@@ -282,7 +282,7 @@ Now let's also fit a points per minute model, based on the home vector model. In
 ```{r compile and fit Stan Poisson Minutes model, include = FALSE}
 stan_model_pois_min <- stan_model(file = "Stan_models/NBA_model_poisson_minutes.stan")
 
-stan_fit_pois_min <- sampling(stan_model_pois_min, data = stan_data, iter = n_sims,
+stan_fit_pois_min <- sampling(stan_model_pois_min, data = stan_data, iter = n_sims, chains = 4, 
                                 # specifying initial values because they get rejected otherwise
                                 # this SHOULD be fixed by modeling on the log-scale
                                 # but we're lazy right now and won't change the model.
@@ -314,8 +314,38 @@ ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_pois_min[1:400, (2 * N_g
 
 Posterior predictive plots also look fine. 
 
-Next, we'll build a model that accounts for offensive and defensive skill.
+Next, we'll build a model that accounts for offensive and defensive skill. Here we'll model the parameters on the log scale so that the sampler doesn't need arbitrary initial values. This comes with a major disadvantage though; the parameters are now multiplicative and less interpretable.
 
+```{r compile and fit Stan Poisson Offense Defense model, include = FALSE}
+stan_model_pois_offdef <- stan_model(file = "Stan_models/NBA_model_poisson_offdef.stan")
+
+stan_fit_pois_offdef <- sampling(stan_model_pois_offdef, data = stan_data, iter = n_sims, chains = 4,
+                                # specifying initial values because they get rejected otherwise
+                                # this SHOULD be fixed by modeling on the log-scale
+                                # but we're lazy right now and won't change the model.
+                                init = list(list(off_skill = rep(10, N_teams)),
+                                            list(off_skill = rep(20, N_teams)),
+                                            list(off_skill = rep(30, N_teams)),
+                                            list(off_skill = rep(40, N_teams))
+                                            )
+                                )
+```
+
+```{r analyze Stan Poisson Offense Defense model}
+print(stan_fit_pois_offdef, pars = c("off_skill", "def_skill", "home_court_advantage"))
+```
+
+Convergence for the skill parameters is good, but effective sample size is a lot smaller. We see home court advantage be about half of what it was in previous models, which makes sense since it is counted double here. Here we can see that Utah is a great defensive team, and Golden State and Houston are great offensive teams. Still, we see many teams defend better than Golden State, so we could potentially still improve this model by adjusting for pace.
+
+```{r posterior predictive check Poisson Offense Defense model}
+y_rep_pois_offdef <- as.matrix(stan_fit_pois_offdef, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
+
+ppc_dens_overlay(y = game_data$pts_away, yrep = y_rep_pois_offdef[1:400, 1:N_games])
+ppc_dens_overlay(y = game_data$pts_home, yrep = y_rep_pois_offdef[1:400, (N_games + 1):(2 * N_games)])
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_pois_offdef[1:400, (2 * N_games + 1):(3 * N_games)])
+```
+
+Predictive checks mostly seem fine, but we still see more density in the middle of the distribution than this model expects.
 
 
 ## Time-series structure
@@ -482,7 +512,7 @@ mean_skill %>% filter(team_name %in% ranked_teams$team_name[25:30]) %>%
 # Predicting new games
 
 
-So far we have checked the model by seeing how well it re-creates the original data through simulations. Another way to check is to fit the model on part of the data and see if you can predict the outcomes of other games. Because of the time-series nature of the data we will only fit the model on sequential data and then predict on newer data.
+So far we have checked the models by seeing how well they re-create the original data through simulations. Another way to check is to fit the models on part of the data and see if you can predict the outcomes of other games. Because of the time-series nature of the data we will only fit the models on sequential data and then predict on newer data.
 
 
 
