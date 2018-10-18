@@ -319,7 +319,7 @@ Next, we'll build a model that accounts for offensive and defensive skill. Here 
 ```{r compile and fit Stan Poisson Offense Defense model, include = FALSE}
 stan_model_pois_offdef <- stan_model(file = "Stan_models/NBA_model_poisson_offdef.stan")
 
-stan_fit_pois_offdef <- sampling(stan_model_pois_offdef, data = stan_data, iter = n_sims, chains = 4,
+stan_fit_pois_offdef <- sampling(stan_model_pois_offdef, data = stan_data, iter = 2 * n_sims, chains = 4,
                                 # specifying initial values because they get rejected otherwise
                                 # this SHOULD be fixed by modeling on the log-scale
                                 # but we're lazy right now and won't change the model.
@@ -333,9 +333,11 @@ stan_fit_pois_offdef <- sampling(stan_model_pois_offdef, data = stan_data, iter 
 
 ```{r analyze Stan Poisson Offense Defense model}
 print(stan_fit_pois_offdef, pars = c("off_skill", "def_skill", "home_court_advantage"))
+
+check_hmc_diagnostics(stan_fit_pois_offdef)
 ```
 
-Convergence for the skill parameters is good, but effective sample size is a lot smaller. We see home court advantage be about half of what it was in previous models, which makes sense since it is counted double here. Here we can see that Utah is a great defensive team, and Golden State and Houston are great offensive teams. Still, we see many teams defend better than Golden State, so we could potentially still improve this model by adjusting for pace.
+Convergence for the skill parameters is good, but effective sample size is a lot smaller. We see home court advantage be about half of what it was in previous models, which makes sense since it is counted double here. Here we can see that Utah is a great defensive team, and Golden State and Houston are great offensive teams. Still, we see many teams defend better than Golden State, so this probably is mainly a function of how fast a team plays. We could potentially still improve this model by adjusting for pace.
 
 ```{r posterior predictive check Poisson Offense Defense model}
 y_rep_pois_offdef <- as.matrix(stan_fit_pois_offdef, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
