@@ -1,6 +1,5 @@
-// Need to update:
-// model everything on log scale so sampling doesn't need
-// artificial initial values
+// In a previous attempt (see below) we tried modeling this on the log scale
+// but that led to strange results.
 data {
   int<lower = 1> N_games;
   int< lower = 2> N_teams;

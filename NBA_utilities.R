@@ -32,3 +32,21 @@ lookup_amount_games_played <- function(game_data, team_mapping_table, N_games_pe
                               home_played <- home_team_amount_played)
 }
 
+compare_predictions_to_actual <- function(prediction, actual) {
+  # predictions is a matrix [iterations x parameters]
+  # actual is a vector of length 'parameters'
+  # output is a vector of cumulative probabilities, indicating
+  # for every observation what the probability is of
+  # this actual outcome OR LESS.
+  n_out <- length(actual)
+  out <- map_dbl(1:n_out, function(i) {mean(prediction[, i] <= actual[i]) })
+  out
+}
+
+compute_predicted_outcome <- function(prediction) {
+  # predictions is a matrix [iterations x parameters]
+  # for each predicted game, outcome is one of 
+  # -1 (home team wins), 0 (overtime) or 1 (away team wins)
+  col_means <- colMeans(prediction)
+  sign(round(col_means))
+}

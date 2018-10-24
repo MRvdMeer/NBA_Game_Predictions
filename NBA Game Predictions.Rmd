@@ -367,7 +367,7 @@ stan_data_ts <- list(
                     N_games_per_team = N_games_per_team
                   )
 
-n_sims <- 10000
+n_sims_ts <- 10000
 ```
 
 
@@ -377,7 +377,7 @@ n_sims <- 10000
 ```{r compile and fit Stan time-series normal model, include = FALSE}
 stan_model_norm_ts_comp <- stan_model(file = "Stan_models/NBA_model_normal_ts.stan")
 
-stan_fit_norm_ts <- sampling(stan_model_norm_ts_comp, data = stan_data_ts, iter = n_sims,
+stan_fit_norm_ts <- sampling(stan_model_norm_ts_comp, data = stan_data_ts, iter = n_sims_ts,
                           control = list(max_treedepth = 15))
 ```
 
@@ -449,7 +449,7 @@ Like before we'll use a Poisson distribution to model points scored by away and 
 ```{r compile and fit Stan time-series Poisson model, include = FALSE}
 stan_model_pois_ts_comp <- stan_model(file = "Stan_models/NBA_model_pois_ts.stan")
 
-stan_fit_pois_ts <- sampling(stan_model_pois_ts_comp, data = stan_data_ts, iter = n_sims,
+stan_fit_pois_ts <- sampling(stan_model_pois_ts_comp, data = stan_data_ts, iter = n_sims_ts,
                           control = list(max_treedepth = 15))
 ```
 
@@ -516,12 +516,92 @@ mean_skill %>% filter(team_name %in% ranked_teams$team_name[25:30]) %>%
 
 So far we have checked the models by seeing how well they re-create the original data through simulations. Another way to check is to fit the models on part of the data and see if you can predict the outcomes of other games. Because of the time-series nature of the data we will only fit the models on sequential data and then predict on newer data.
 
-
+For now we'll just split the season into a training period and then a prediction period - can we predict the next couple of games after training the model?
 
 
 ```{r additional data manipulation for predictions}
+# arbitrary split of the season
+
+N_games_played <- 200 # we'll fit the model on this many games
+N_new_games <- N_games - N_games_played
+#N_new_games <- 10 # we'll predict this many games after training the model
+
+game_data_played <- game_data[1:N_games_played, ]
+game_data_new <- game_data[(N_games_played + 1):(N_games_played + N_new_games) ,]
+
 #game_data_pred <- lookup_amount_games_played(game_data, team_mapping_table, N_games_per_team)
 
+stan_data_pred <- list(
+                    N_games = N_games_played,
+                    N_new_games = N_new_games,
+                    N_teams = N_teams,
+                    away_points = game_data_played$pts_away,
+                    home_points = game_data_played$pts_home,
+                    overtime = game_data_played$overtime,
+                    away_team_id = game_data_played$away_team_id,
+                    home_team_id = game_data_played$home_team_id,
+                    away_id_new = game_data_new$away_team_id,
+                    home_id_new = game_data_new$home_team_id
+                  )
 
+n_sims_pred <- 4000
 
+```
+
+```{r compile and fit predictive normal model, include = FALSE}
+stan_pred_normal_comp <- stan_model(file = "Stan_models/NBA_pred_normal.stan")
+
+stan_pred_normal_fit <- sampling(stan_pred_normal_comp, data = stan_data_pred, iter = n_sims_pred)
+```
+
+```{r analyze output of predictive normal model}
+print(stan_pred_normal_fit, pars = c("score_difference_pred"))
+
+game_data_new %>% select(date, away_team, home_team, pts_away, pts_home, overtime, score_diff) %>% print(n = 10)
+
+score_diff_predictions <- as.matrix(stan_pred_normal_fit, pars = c("score_difference_pred"))
+score_diff_actual <- game_data_new$score_diff
+
+cum_probs <- compare_predictions_to_actual(score_diff_predictions, score_diff_actual)
+print(cum_probs)
+
+predicted_outcome <- compute_predicted_outcome(score_diff_predictions)
+actual_outcome <- sign(score_diff_actual)
+
+prediction_table <- matrix(c(predicted_outcome, actual_outcome, predicted_outcome == actual_outcome), ncol = 3)
+prediction_quality <- mean(abs(predicted_outcome - actual_outcome) / 2) # lower is better
+
+print(prediction_quality)
+print(prediction_table)
+```
+
+After training on 100 games and predicting 10 games, we see multiple games where the actual score difference is outside the 95% posterior interval for the predicted score difference. After training on 200 games we still had this problem. We see a couple of extreme outcomes (above 98% cumulative probability). Still, this may be a result of the model used. 
+
+The framework seems to work though, so now let's try to use some more sophisticated models for prediction.
+
+```{r compile and fit predictive normal home model, include = FALSE}
+stan_pred_normal_home_comp <- stan_model(file = "Stan_models/NBA_pred_normal_home.stan")
+
+stan_pred_normal_home_fit <- sampling(stan_pred_normal_home_comp, data = stan_data_pred, iter = n_sims_pred)
+```
+
+```{r analyze output of predictive normal home model}
+print(stan_pred_normal_home_fit, pars = c("score_difference_pred", "home_court_advantage"))
+
+game_data_new %>% select(date, away_team, home_team, pts_away, pts_home, overtime, score_diff) %>% print(n = 10)
+
+score_diff_predictions <- as.matrix(stan_pred_normal_home_fit, pars = c("score_difference_pred"))
+score_diff_actual <- game_data_new$score_diff
+
+cum_probs <- compare_predictions_to_actual(score_diff_predictions, score_diff_actual)
+print(cum_probs)
+
+predicted_outcome <- compute_predicted_outcome(score_diff_predictions)
+actual_outcome <- sign(score_diff_actual)
+
+prediction_table <- matrix(c(predicted_outcome, actual_outcome, predicted_outcome == actual_outcome), ncol = 3)
+prediction_quality <- mean(abs(predicted_outcome - actual_outcome) / 2) # lower is better
+
+print(prediction_quality)
+print(prediction_table)
 ```
