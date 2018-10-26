@@ -352,7 +352,7 @@ Predictive checks mostly seem fine, but we still see more density in the middle 
 
 ## Time-series structure
 
-So far we have only fit the model on the entire season at once. Another approach would be to allow the skill of the teams to vary over time. We'll revisit the simpler normal model for score differences with home court, but now we'll update our estimate of the teams' skill parameters after each game.
+So far we have only fit the model on the entire season at once. Another approach would be to allow the skill of the teams to vary over time. This makes it possible to estimate the form of a team at various moments in the season.
 
 
 ```{r set up data for Stan time series modeling}
@@ -373,6 +373,7 @@ n_sims_ts <- 10000
 
 ### Time-series model for score difference
 
+First we'll revisit the simpler normal model for score differences with home court, but now we'll update our estimate of the teams' skill parameters after each game.
 
 ```{r compile and fit Stan time-series normal model, include = FALSE}
 stan_model_norm_ts_comp <- stan_model(file = "Stan_models/NBA_model_normal_ts.stan")
@@ -563,7 +564,8 @@ score_diff_predictions <- as.matrix(stan_pred_normal_fit, pars = c("score_differ
 score_diff_actual <- game_data_new$score_diff
 
 cum_probs <- compare_predictions_to_actual(score_diff_predictions, score_diff_actual)
-print(cum_probs)
+# print(cum_probs)
+quantile(cum_probs, probs = c(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99))
 
 predicted_outcome <- compute_predicted_outcome(score_diff_predictions)
 actual_outcome <- sign(score_diff_actual)
@@ -572,7 +574,7 @@ prediction_table <- matrix(c(predicted_outcome, actual_outcome, predicted_outcom
 prediction_quality <- mean(abs(predicted_outcome - actual_outcome) / 2) # lower is better
 
 print(prediction_quality)
-print(prediction_table)
+# print(prediction_table)
 ```
 
 After training on 100 games and predicting 10 games, we see multiple games where the actual score difference is outside the 95% posterior interval for the predicted score difference. After training on 200 games we still had this problem. We see a couple of extreme outcomes (above 98% cumulative probability). Still, this may be a result of the model used. 
@@ -594,7 +596,8 @@ score_diff_predictions <- as.matrix(stan_pred_normal_home_fit, pars = c("score_d
 score_diff_actual <- game_data_new$score_diff
 
 cum_probs <- compare_predictions_to_actual(score_diff_predictions, score_diff_actual)
-print(cum_probs)
+# print(cum_probs)
+quantile(cum_probs, probs = c(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99))
 
 predicted_outcome <- compute_predicted_outcome(score_diff_predictions)
 actual_outcome <- sign(score_diff_actual)
@@ -603,5 +606,42 @@ prediction_table <- matrix(c(predicted_outcome, actual_outcome, predicted_outcom
 prediction_quality <- mean(abs(predicted_outcome - actual_outcome) / 2) # lower is better
 
 print(prediction_quality)
-print(prediction_table)
+# print(prediction_table)
 ```
+
+We still see quite a few extreme outcomes, so let's try to make predictions using a t model.
+
+
+```{r compile and fit predictive t home model, include = FALSE}
+stan_pred_t_home_comp <- stan_model(file = "Stan_models/NBA_pred_t_home.stan")
+
+stan_pred_t_home_fit <- sampling(stan_pred_t_home_comp, data = stan_data_pred, iter = n_sims_pred)
+```
+
+```{r analyze output of predictive t home model}
+print(stan_pred_t_home_fit, pars = c("deg_free", "score_difference_pred", "home_court_advantage"))
+
+game_data_new %>% select(date, away_team, home_team, pts_away, pts_home, overtime, score_diff) %>% print(n = 10)
+
+score_diff_predictions <- as.matrix(stan_pred_t_home_fit, pars = c("score_difference_pred"))
+score_diff_actual <- game_data_new$score_diff
+
+cum_probs <- compare_predictions_to_actual(score_diff_predictions, score_diff_actual)
+# print(cum_probs)
+quantile(cum_probs, probs = c(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99))
+
+predicted_outcome <- compute_predicted_outcome(score_diff_predictions)
+actual_outcome <- sign(score_diff_actual)
+
+prediction_table <- matrix(c(predicted_outcome, actual_outcome, predicted_outcome == actual_outcome), ncol = 3)
+prediction_quality <- mean(abs(predicted_outcome - actual_outcome) / 2) # lower is better
+
+print(prediction_quality)
+# print(prediction_table)
+```
+
+
+The quantiles seem slightly better calibrated, but the win/loss predictions aren't when compared to the normal model with home court advantage. The degrees of freedom parameter is estimated to be quite low; this is evidence against the normal model.
+
+
+
