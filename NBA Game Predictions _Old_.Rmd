@@ -446,6 +446,8 @@ mean_skill %>% filter(team_name %in% ranked_teams$team_name[25:30]) %>%
 
 Like before we'll use a Poisson distribution to model points scored by away and home teams directly.
 
+THIS MODEL STILL NEEDS TO BE COMPLETED.
+
 
 ```{r compile and fit Stan time-series Poisson model, include = FALSE}
 stan_model_pois_ts_comp <- stan_model(file = "Stan_models/NBA_model_pois_ts.stan")
