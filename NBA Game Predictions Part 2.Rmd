@@ -8,6 +8,8 @@ output: html_notebook
 
 This is part 2 in our series on NBA game predictions. In part 1 we built some models. In this part we'll build different models.
 
+In this part we will focus on modeling the difference in score between the two teams for a single game.
+
 
 # Initial setup
 
@@ -45,6 +47,44 @@ N_games_per_team <- 82
 n_sims <- 4000
 
 ```
+
+
+# Some quick data exploration
+
+```{r quick summary of the data}
+paste("Average score difference:", round(mean(game_data$score_diff), 2))
+paste("Standard deviation of score difference:", round(sd(game_data$score_diff), 2))
+paste("Number of overtime games:", round(sum(game_data$score_diff == 0), 2))
+
+paste("Average points scored by away team:", round(mean(game_data$pts_away), 2))
+paste("Variance of away points:", round(var(game_data$pts_away), 2))
+paste("Average points scored by home team:", round(mean(game_data$pts_home), 2))
+paste("Variance of home points:", round(var(game_data$pts_home), 2))
+
+summary(game_data)
+```
+
+Here we see both the home and away points scored are a bit over-dispersed.
+
+```{r some quick plots}
+ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_density(color = "blue")
+
+game_data %>%
+  gather(key = "away_home", value = "points", pts_away, pts_home) %>%
+  ggplot(aes(x = points, col = away_home)) + geom_density() + scale_color_manual(values = c("orange", "darkblue"))
+
+ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_histogram(binwidth = 1, fill = "blue", color = "black")
+
+game_data %>%
+  gather(key = "away_home", value = "points", pts_away, pts_home) %>%
+  ggplot(aes(x = points, col = away_home, fill = away_home)) + geom_histogram(binwidth = 1) + scale_fill_manual(values = c("orange", "darkblue")) + facet_wrap("away_home")
+
+```
+
+
+It appears the observed score difference seems to be bimodal, and there appears to be some home-court advantage (more negative score differences than positive). We will use this in the model later.
+Also, the distribution of points scored seems relatively bell-shaped, with perhaps a bit more mass towards the tails than we would expect from a normal distribution.
+Finally, the distribution shows that overtime games are more frequent than might be expected by pure chance.
 
 
 

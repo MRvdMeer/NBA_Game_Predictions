@@ -8,7 +8,7 @@ output: html_notebook
 
 In this series of notebooks we will build some Bayesian models to model the outcome of NBA games. We will then try to use these models to predict the outcomes of new NBA games.
 
-In this part we will focus on modeling the difference in score between the two teams for a single game. We'll start with a simple model and gradually try to improve it.
+In this part we will try to model the winner of a game. We'll start with the simplest possible model and slowly add complexity to model specific aspects of a basketball game.
 
 In the next parts we will try a number of alternative approaches and eventually see which one works best.
 
@@ -18,6 +18,7 @@ In the next parts we will try a number of alternative approaches and eventually 
 ```{r load packages and further setup, message=FALSE, include=FALSE}
 library(tidyverse)
 library(rstan)
+library(loo)
 library(bayesplot)
 
 theme_set(bayesplot::theme_default())
@@ -35,7 +36,8 @@ game_data <- game_data %>%
                 select(date = Date, away_team = "Visitor/Neutral", home_team = "Home/Neutral", pts_away = PTS_A, pts_home = PTS_H, overtime = OT) %>%
                 mutate(overtime = ifelse (is.na(overtime), 0L, 
                                           ifelse(stringr::str_length(overtime) == 2, 1L, as.integer(substring(overtime, 1, 1)))),
-                       score_diff = ifelse(overtime == 0, pts_away - pts_home, 0L))
+                       score_diff = ifelse(overtime == 0, pts_away - pts_home, 0L),
+                       home_win = ifelse(pts_away - pts_home < 0, 1L, 0L))
 
 # create a single identifier used for both away and home teams
 unique_teams <- sort(unique(c(game_data$away_team, game_data$home_team)))
@@ -53,53 +55,17 @@ n_sims <- 4000
 
 # Some quick data exploration
 
-```{r quick summary of the data}
-paste("Average score difference:", round(mean(game_data$score_diff), 2))
-paste("Standard deviation of score difference:", round(sd(game_data$score_diff), 2))
-paste("Number of overtime games:", round(sum(game_data$score_diff == 0), 2))
-
-paste("Average points scored by away team:", round(mean(game_data$pts_away), 2))
-paste("Variance of away points:", round(var(game_data$pts_away), 2))
-paste("Average points scored by home team:", round(mean(game_data$pts_home), 2))
-paste("Variance of home points:", round(var(game_data$pts_home), 2))
-
-summary(game_data)
-```
-
-Here we see both the home and away points scored are a bit over-dispersed.
-
-```{r some quick plots}
-ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_density(color = "blue")
-
-game_data %>%
-  gather(key = "away_home", value = "points", pts_away, pts_home) %>%
-  ggplot(aes(x = points, col = away_home)) + geom_density() + scale_color_manual(values = c("orange", "darkblue"))
-
-ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_histogram(binwidth = 1, fill = "blue", color = "black")
-
-game_data %>%
-  gather(key = "away_home", value = "points", pts_away, pts_home) %>%
-  ggplot(aes(x = points, col = away_home, fill = away_home)) + geom_histogram(binwidth = 1) + scale_fill_manual(values = c("orange", "darkblue")) + facet_wrap("away_home")
-
-```
-
-
-It appears the observed score difference seems to be bimodal, and there appears to be some home-court advantage (more negative score differences than positive). We will use this in the model later.
-Also, the distribution of points scored seems relatively bell-shaped, with perhaps a bit more mass towards the tails than we would expect from a normal distribution.
-Finally, the distribution shows that overtime games are more frequent than might be expected by pure chance.
-
 
 # Modeling game outcomes with Stan
 
 ```{r set up data for Stan}
 stan_data <- list(
-                    N_games = N_games,
-                    N_teams = N_teams,
-                    away_points = game_data$pts_away,
-                    home_points = game_data$pts_home,
-                    overtime = game_data$overtime,
-                    away_team_id = game_data$away_team_id,
-                    home_team_id = game_data$home_team_id
+                    home_win = home_win,
+                    home_skill_est = home_skill_est,
+                    home_skill_uncertainty = home_skill_uncertainty,
+                    away_skill_est = away_skill_est,
+                    away_skill_uncertainty = away_skill_uncertainty,
+                    game_uncertainty = game_uncertainty
                   )
 ```
 
