@@ -84,6 +84,7 @@ source("NBA_utilities.R")
 set.seed(12)
 ```
 
+
 ```{r load data and some data manipulation}
 game_data <- read_csv("NBA Game Data 20162017.csv")
 game_data <- game_data %>% 
@@ -109,8 +110,9 @@ n_sims <- 4000
 
 # Some quick data exploration
 
-
-
+```{r}
+str(game_data)
+```
 
 
 # Modeling game outcomes with Stan
