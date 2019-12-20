@@ -110,6 +110,7 @@ n_sims <- 4000
 
 # Some quick data exploration
 
+
 ```{r}
 str(game_data)
 ```
