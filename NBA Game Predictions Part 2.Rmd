@@ -50,7 +50,7 @@ source("NBA_utilities.R")
 set.seed(12)
 ```
 
-```{r load data and some data manipulation}
+```{r load data and some data manipulation, include = FALSE}
 game_data <- read_csv("NBA Game Data 20162017.csv")
 game_data <- game_data %>% 
                 select(date = Date, away_team = "Visitor/Neutral", home_team = "Home/Neutral", pts_away = PTS_A, pts_home = PTS_H, overtime = OT) %>%
@@ -68,7 +68,6 @@ N_teams = length(team_mapping_table$team_id)
 game_data <- game_data %>% mutate(away_team_id = team_id[1:N_games], home_team_id = team_id[(N_games + 1):(2 * N_games)])
 N_games_per_team <- 82
 n_sims <- 4000
-
 ```
 
 

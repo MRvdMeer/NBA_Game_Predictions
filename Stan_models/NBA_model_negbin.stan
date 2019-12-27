@@ -1,6 +1,6 @@
 data {
   int<lower = 1> N_games;
-  int< lower = 2> N_teams;
+  int<lower = 2> N_teams;
   int<lower = 0> away_points[N_games];
   int<lower = 0> home_points[N_games];
   int<lower = 0> overtime[N_games];

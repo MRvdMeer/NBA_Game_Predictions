@@ -46,23 +46,32 @@ A very simple example of how to model a basketball game is as follows:
 - every team has a certain skill level, which we cannot observe, which we will describe using a real-valued parameter
 - the outcome of a basketball game is a random process which uses these skill parameters of the two teams playing, as well as potentially other parameters
 
-We will use the Normal distribution to encode the outcome of a basketball game as follows:
-
+A very basic process that uses these to assumptions is to model the outcome of a basketball game as follows:
 
 $$
 w_i \sim \mathrm{Bernoulli}(p_i) \\
-p_i = \mathrm{InverseNormal}(\frac{s1_i - s2_i}{\sigma}) \\
-s1_i, s2_i \sim \mathrm{N}(0, 1) \\
+p_i = \mathrm{Logit^{-1}}({s_{1i} - s_{2i}}) \\
+s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
+$$
+
+Here $w_i$ denotes the winner of game $i$, and $s_{1i}$ and $s_{2i}$ denote the skill parameters of the two teams in game $i$. This essentially means that each basketball game is simplified to a single coinflip, where the probability of landing heads (i.e. the home team winning) is a function of the two skill levels of the teams.
+
+A similar model for the outcome of a basketball game is this.
+
+$$
+w_i \sim \mathrm{Bernoulli}(p_i) \\
+p_i = \mathrm{InverseNormal}(\frac{s_{1i} - s_{2i}}{\sigma}) \\
+s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
 \sigma \sim \mathrm{HalfNormal}(0, 1)
 $$
 
-where $w_i$ denotes the winner of game $i$, $s1_i$ and $s2_i$ denote the skill parameters of the two teams in game $i$, and $\sigma$ denotes the amount of uncertainty present in a basketball game. The priors essentially encode that we don't know before the game which team is better, so both hidden skill parameters are drawn from the same distribution centered at zero.
+where $w_i$ denotes the winner of game $i$, $s_{1i}$ and $s_{2i}$ denote the skill parameters of the two teams in game $i$, and $\sigma$ denotes the amount of uncertainty present in a basketball game. The priors essentially encode that we don't know before the game which team is better, so both hidden skill parameters are drawn from the same distribution centered at zero.
 
 This will be the our most basic model of a basketball game.
 
 When our assumptions are explicitly encoded into a model, we can combine the model with observations to learn more about the parameters. This process is called *inference*.
 
-For example, if team 1 won the game, we would infer that $s1$ is likely greater than $s2$. In particular, we started off with a probability distribution for these parameters which was identical, and combining this distribution with data will yield a new probability distribution for the parameters, which is called the *posterior* distribution. In these notebooks we will use a language called Stan to calculate the posterior distribution for us.
+For example, if team 1 won the game, we would infer that $s_1$ is likely greater than $s_2$. In particular, we started off with a probability distribution for these parameters which was identical, and combining this distribution with data will yield a new probability distribution for the parameters, which is called the *posterior* distribution. In these notebooks we will use a language called Stan to calculate the posterior distribution for us.
 
 Still, the amount that can be learned from a single game is limited. In our NBA example, we'd like to analyze the outcomes of many games, so that we can more accurately learn the skill levels of all the teams.
 
@@ -72,21 +81,20 @@ Still, the amount that can be learned from a single game is limited. In our NBA 
 ```{r load packages and further setup, message=FALSE, include=FALSE}
 library(tidyverse)
 library(rstan)
-library(loo)
 library(bayesplot)
 
 theme_set(bayesplot::theme_default())
 
 options(mc.cores = parallel::detectCores())
 
-source("NBA_utilities.R")
+source("./NBA_utilities.R")
 
 set.seed(12)
 ```
 
 
-```{r load data and some data manipulation}
-game_data <- read_csv("NBA Game Data 20162017.csv")
+```{r load data and some data manipulation, include = FALSE}
+game_data <- read_csv("./NBA Game Data 20162017.csv")
 game_data <- game_data %>% 
                 select(date = Date, away_team = "Visitor/Neutral", home_team = "Home/Neutral", pts_away = PTS_A, pts_home = PTS_H, overtime = OT) %>%
                 mutate(overtime = ifelse (is.na(overtime), 0L, 
@@ -103,8 +111,7 @@ N_games <- nrow(game_data)
 N_teams = length(team_mapping_table$team_id)
 game_data <- game_data %>% mutate(away_team_id = team_id[1:N_games], home_team_id = team_id[(N_games + 1):(2 * N_games)])
 N_games_per_team <- 82
-n_sims <- 4000
-
+n_sims <- 10000
 ```
 
 
@@ -120,25 +127,76 @@ str(game_data)
 
 ```{r set up data for Stan}
 stan_data <- list(
-                    home_win = home_win,
-                    home_skill_est = home_skill_est,
-                    home_skill_uncertainty = home_skill_uncertainty,
-                    away_skill_est = away_skill_est,
-                    away_skill_uncertainty = away_skill_uncertainty,
-                    game_uncertainty = game_uncertainty
+                    N_games = N_games,
+                    N_teams = N_teams,
+                    home_win = game_data$home_win,
+                    away_team_id = game_data$away_team_id,
+                    home_team_id = game_data$home_team_id
                   )
 ```
 
 
-
-
-
 ## Modeling the season as a whole
 
-First we'll try to fit a model to all games at once. 
+First we'll try to fit a model to all games at once.
+
+```{r compile and fit base bernoulli logit model, include = FALSE}
+bern_logit_stan <- stan_model(file = "./Stan_models/NBA_base_bernoulli_logit_win_prob.stan")
+
+fit_bern_logit <- sampling(bern_logit_stan, data = stan_data, iter = n_sims)
+```
+
+```{r analyze bernoulli logit model}
+print(fit_bern_logit, pars = c("team_skill"))
+```
+
+This table shows the estimated team skills for all the teams. We can see that team 10 (the Golden State Warriors) has the highest estimated skill and team 3 (the Brooklyn Nets) has the lowest. This is not a surprise - these are the teams with the highest and lowest win totals in the 2016-2017 season, respectively.
 
 
-### Models based on Elo / TrueSkill - modeling game winner
+```{r posterior predictive check bernoulli logit model}
+y_rep_bern_logit <- as.matrix(fit_bern_logit, pars = "home_win_rep")
+
+ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_bern_logit[1:400, ])
+```
+
+
+Here we see that outcomes are less symmetric than in our assumptions - home teams tend to win more than away teams, all else being equal. This should not come as a big surprise, as the home team tends to have a small but noticable advantage in basketball. We'll keep this in mind when trying to improve our model.
+
+
+
+```{r compile and fit normal win probability model, include = FALSE}
+normal_winprob_stan <- stan_model(file = "./Stan_models/NBA_base_normal_win_prob.stan")
+
+fit_normal_winprob <- sampling(normal_winprob_stan, data = stan_data, iter = n_sims)
+```
+
+```{r analyze normal win probability model}
+print(fit_normal_winprob, pars = c("team_skill", "game_uncertainty"))
+```
+
+Here we see roughly the same table again. It includes one more parameter, the `game_uncertainty`, which tells us how much chance impacts the basketball games. When game uncertainty is high relative to team skills, every game essentially becomes a toss-up. On the other hand, if team skills are much higher than game uncertainty (in absolute value), then chance has little effect on the outcome and skill almost always determines the winner. Here we see that game uncertainty is a bit higher then any individual team skill. This means that skill has a meaningful effect but the outcome of any game is far from certain. 
+
+
+```{r posterior predictive check normal win probability model}
+y_rep_bern_logit <- as.matrix(fit_normal_winprob, pars = "home_win_rep")
+
+ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_bern_logit[1:400, ])
+```
+
+This plot shows the same as the previous one - home teams tend to win more than away teams.
+
+
+### Interpreting parameter values
+
+So far we've looked at the estimated skill values from two different models, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team in both models, but their estimated skill difference over the second team is `1.46 - 1.07 = 0.39` in the first model, while it is `4.32 - 3.15 = 1.17` in the second model. What do these number mean?
+
+
+
+
+
+## Modeling the season as a time series
+
+
 
 
 
