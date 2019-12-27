@@ -188,7 +188,7 @@ This plot shows the same as the previous one - home teams tend to win more than 
 
 ### Interpreting parameter values
 
-So far we've looked at the estimated skill values from two different models, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team in both models, but their estimated skill difference over the second team is `1.46 - 1.07 = 0.39` in the first model, while it is `4.32 - 3.15 = 1.17` in the second model. What do these number mean?
+So far we've looked at the estimated skill values from two different models, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team in both models, but their estimated skill difference over the second team is `1.45 - 1.06 = 0.39` in the first model, while it is `2.01 - 1.48 = 0.53` in the second model. What do these number mean?
 
 
 
