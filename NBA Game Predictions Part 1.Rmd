@@ -137,6 +137,7 @@ stan_data <- list(
 
 First we'll try to fit a model to all games at once. 
 
+
 ### Models based on Elo / TrueSkill - modeling game winner
 
 
