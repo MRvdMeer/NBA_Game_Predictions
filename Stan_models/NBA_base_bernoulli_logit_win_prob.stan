@@ -20,18 +20,10 @@ transformed parameters {
 
 model {
   // priors
-<<<<<<< HEAD
   team_skill ~ normal(0, 1);
   
   // likelihood
   home_win ~ bernoulli_logit(logit_prob_home_win);
-=======
-  team_skill ~ normal(0, 4);
-  #home_court_advantage ~ normal(0, 4);
-  
-  // likelihood
-  home_win ~ bernoulli(prob_home_win);
->>>>>>> 62e80d96ade356aa49befc2fee410917daca8e2e
 }
 
 generated quantities {
