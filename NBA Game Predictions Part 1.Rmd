@@ -194,11 +194,40 @@ So far we've looked at the estimated skill values from two different models, but
 
 
 
+<<<<<<< HEAD
 ## Modeling the season as a time series
+=======
+First we'll try to fit a model to all games at once.
 
+```{r compile and fit base bernoulli logit model, include = FALSE}
+bern_logit_stan <- stan_model(file = "Stan_models/NBA_base_bernoulli_logit_win_prob.stan")
 
+fit_bern_logit <- sampling(bern_logit_stan, data = stan_data, iter = n_sims)
+```
 
+```{r analyze base Stan model}
+print(fit_bern_logit, pars = c("team_skill"))
+```
 
+The base model shows a very bad fit. The reason is that the model is non-identifiable: since we only model the difference in points scored, we can add an arbitrary constant to home skill and away skill for all teams in the dataset and this will lead to the exact same inference. We'll quickly fix this by adding some weak priors.
+
+```{r compile and fit weak prior normal Stan model, include = FALSE}
+stan_model_base_comp <- stan_model(file = "Stan_models/NBA_base_model_normal_weak_priors.stan")
+
+stan_fit_base <- sampling(stan_model_base_comp, data = stan_data, iter = n_sims)
+```
+
+```{r analyze weak prior normal Stan model}
+print(stan_fit_base, pars = c("team_skill", "stdev"))
+```
+
+This looks much better - the convergence diagnostics show no problems now. We see the Golden State Warriors are the best team here and the Brooklyn Nets are the worst. This is not a surprise - these were the teams that won the most / least games, respectively. Let's see how well we re-predict the game data.
+
+```{r posterior predictive check base model}
+y_rep_base <- as.matrix(stan_fit_base, pars = "score_difference_rep")
+
+ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_base[1:400, ])
+```
 
 
 

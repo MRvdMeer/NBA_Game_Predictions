@@ -22,7 +22,10 @@ transformed parameters {
 model {
   // priors
   game_uncertainty ~ normal(0, 1);
+<<<<<<< HEAD
   team_skill ~ normal(0, 1);
+=======
+>>>>>>> 62e80d96ade356aa49befc2fee410917daca8e2e
   
   // likelihood
   home_win ~ bernoulli(prob_home_win);
@@ -31,6 +34,9 @@ model {
 generated quantities {
   real home_win_rep[N_games];
   for (n in 1:N_games) {
+<<<<<<< HEAD
     home_win_rep[n] = bernoulli_rng(prob_home_win[n]);
+=======
+>>>>>>> 62e80d96ade356aa49befc2fee410917daca8e2e
   }
 }
