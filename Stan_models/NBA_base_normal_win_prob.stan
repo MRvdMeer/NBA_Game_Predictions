@@ -8,20 +8,21 @@ data {
 
 parameters {
   real team_skill[N_teams];
-  real<lower = 0> game_uncertainty;
+  //real<lower = 0> game_uncertainty;
 }
 
 transformed parameters {
   vector[N_games] prob_home_win;
   
   for (n in 1:N_games) {
-    prob_home_win[n] = 1 - normal_cdf(0, team_skill[home_team_id[n]] - team_skill[away_team_id[n]], game_uncertainty);
+    prob_home_win[n] = Phi(team_skill[home_team_id[n]] - team_skill[away_team_id[n]]);
+    //prob_home_win[n] = 1 - normal_cdf(0, team_skill[home_team_id[n]] - team_skill[away_team_id[n]], game_uncertainty);
   }
 }
 
 model {
   // priors
-  game_uncertainty ~ normal(0, 1);
+  //game_uncertainty ~ normal(0, 1);
   team_skill ~ normal(0, 1);
   
   // likelihood

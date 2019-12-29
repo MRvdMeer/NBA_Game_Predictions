@@ -60,7 +60,7 @@ A similar model for the outcome of a basketball game is this.
 
 $$
 w_i \sim \mathrm{Bernoulli}(p_i) \\
-p_i = \mathrm{InverseNormal}(\frac{s_{1i} - s_{2i}}{\sigma}) \\
+p_i = \mathrm{InverseStandardNormal}(s_{1i} - s_{2i}) \\
 s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
 \sigma \sim \mathrm{HalfNormal}(0, 1)
 $$
@@ -171,10 +171,10 @@ fit_normal_winprob <- sampling(normal_winprob_stan, data = stan_data, iter = n_s
 ```
 
 ```{r analyze normal win probability model}
-print(fit_normal_winprob, pars = c("team_skill", "game_uncertainty"))
+print(fit_normal_winprob, pars = c("team_skill"))
 ```
 
-Here we see roughly the same table again. It includes one more parameter, the `game_uncertainty`, which tells us how much chance impacts the basketball games. When game uncertainty is high relative to team skills, every game essentially becomes a toss-up. On the other hand, if team skills are much higher than game uncertainty (in absolute value), then chance has little effect on the outcome and skill almost always determines the winner. Here we see that game uncertainty is a bit higher then any individual team skill. This means that skill has a meaningful effect but the outcome of any game is far from certain. 
+THIS SECTION NEEDS TO BE REDONE IN BECAUSE OF MODEL IMPROVEMENTS
 
 
 ```{r posterior predictive check normal win probability model}
@@ -188,7 +188,7 @@ This plot shows the same as the previous one - home teams tend to win more than 
 
 ### Interpreting parameter values
 
-So far we've looked at the estimated skill values from two different models, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team in both models, but their estimated skill difference over the second team is `1.45 - 1.06 = 0.39` in the first model, while it is `2.01 - 1.48 = 0.53` in the second model. What do these number mean?
+So far we've looked at the estimated skill values from two different models, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team in both models, but their estimated skill difference over the second team is `1.45 - 1.06 = 0.39` in the first model, while it is `0.92 - 0.67 = 0.25` in the second model. What do these number mean?
 
 
 
