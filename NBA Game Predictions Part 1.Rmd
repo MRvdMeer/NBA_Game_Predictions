@@ -41,12 +41,12 @@ In the next parts we will try a number of alternative approaches and eventually 
 
 The outcome of a basketball game is uncertain. While we might know in advance which team is more likely to win, we can never be sure until the final buzzer has sounded. Because of this uncertainty we will describe basketball games using *probabilistic models*. Describing a game like this will allow us to then perform inference over the quantities of interest.
 
-A very simple example of how to model a basketball game is as follows:
+A very simple set of assumptions of how to model a basketball game is as follows:
 
 - every team has a certain skill level, which we cannot observe, which we will describe using a real-valued parameter
-- the outcome of a basketball game is a random process which uses these skill parameters of the two teams playing, as well as potentially other parameters
+- the outcome of a basketball game is a random process that only depends on the difference between the skill levels of the two teams
 
-A very basic process that uses these to assumptions is to model the outcome of a basketball game as follows:
+Putting these assumptions into a set of equations might look as follows:
 
 $$
 w_i \sim \mathrm{Bernoulli}(p_i) \\
@@ -55,17 +55,6 @@ s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
 $$
 
 Here $w_i$ denotes the winner of game $i$, and $s_{1i}$ and $s_{2i}$ denote the skill parameters of the two teams in game $i$. This essentially means that each basketball game is simplified to a single coinflip, where the probability of landing heads (i.e. the home team winning) is a function of the two skill levels of the teams.
-
-A similar model for the outcome of a basketball game is this.
-
-$$
-w_i \sim \mathrm{Bernoulli}(p_i) \\
-p_i = \mathrm{InverseStandardNormal}(s_{1i} - s_{2i}) \\
-s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
-\sigma \sim \mathrm{HalfNormal}(0, 1)
-$$
-
-where $w_i$ denotes the winner of game $i$, $s_{1i}$ and $s_{2i}$ denote the skill parameters of the two teams in game $i$, and $\sigma$ denotes the amount of uncertainty present in a basketball game. The priors essentially encode that we don't know before the game which team is better, so both hidden skill parameters are drawn from the same distribution centered at zero.
 
 This will be the our most basic model of a basketball game.
 
@@ -138,60 +127,119 @@ stan_data <- list(
 
 ## Modeling the season as a whole
 
-First we'll try to fit a model to all games at once.
 
-```{r compile and fit base bernoulli logit model, include = FALSE}
-bern_logit_stan <- stan_model(file = "./Stan_models/NBA_base_logit_win_prob.stan")
+```{r compile and fit base logit model, include = FALSE}
+logit_winprob_stan <- stan_model(file = "./Stan_models/NBA_base_logit_win_prob.stan")
 
-fit_bern_logit <- sampling(bern_logit_stan, data = stan_data, iter = n_sims)
+fit_logit_winprob <- sampling(logit_winprob_stan, data = stan_data, iter = n_sims)
 ```
 
-```{r analyze bernoulli logit model}
-print(fit_bern_logit, pars = c("team_skill"))
+```{r analyze base logit model}
+print(fit_logit_winprob, pars = c("team_skill"))
 ```
 
 This table shows the estimated team skills for all the teams. We can see that team 10 (the Golden State Warriors) has the highest estimated skill and team 3 (the Brooklyn Nets) has the lowest. This is not a surprise - these are the teams with the highest and lowest win totals in the 2016-2017 season, respectively.
 
 
-```{r posterior predictive check bernoulli logit model}
-y_rep_bern_logit <- as.matrix(fit_bern_logit, pars = "home_win_rep")
+```{r posterior predictive check base logit model}
+y_rep_logit <- as.matrix(fit_logit_winprob, pars = "home_win_rep")
 
-ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_bern_logit[1:400, ])
+ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_logit[1:400, ])
 ```
 
 
 Here we see that outcomes are less symmetric than in our assumptions - home teams tend to win more than away teams, all else being equal. This should not come as a big surprise, as the home team tends to have a small but noticable advantage in basketball. We'll keep this in mind when trying to improve our model.
 
 
-
-```{r compile and fit normal win probability model, include = FALSE}
-normal_winprob_stan <- stan_model(file = "./Stan_models/NBA_base_probit_win_prob.stan")
-
-fit_normal_winprob <- sampling(normal_winprob_stan, data = stan_data, iter = n_sims)
-```
-
-```{r analyze normal win probability model}
-print(fit_normal_winprob, pars = c("team_skill"))
-```
-
-THIS SECTION NEEDS TO BE REDONE IN BECAUSE OF MODEL IMPROVEMENTS
-
-
-```{r posterior predictive check normal win probability model}
-y_rep_bern_logit <- as.matrix(fit_normal_winprob, pars = "home_win_rep")
-
-ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_bern_logit[1:400, ])
-```
-
-This plot shows the same as the previous one - home teams tend to win more than away teams.
-
-
 ### Interpreting parameter values
 
-So far we've looked at the estimated skill values from two different models, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team in both models, but their estimated skill difference over the second team is `1.45 - 1.06 = 0.39` in the first model, while it is `0.92 - 0.67 = 0.25` in the second model. What do these number mean?
+So far we've looked at the estimated skill values the model, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team, but their estimated skill difference over the San Antonio Spurs (team 27) is `1.45 - 1.06 = 0.39`. What does this mean?
+
+First, note that $\mathrm{Logit}(p) = \mathrm{log} \frac{p}{1 - p}$, which is the logarithm of the odds of winning, and so if $s_1 - s_2 = \mathrm{Logit}(p)$ then $\frac{p}{1 - p} = \mathrm{exp}(s_1 - s_2)$. So if $s_1 = s_2$ then $p = 1 - p$ and both teams have a 50 percent probability of winning.
+
+In general, suppose we have team skills $s_1$ and $s_2$, and now team 1 increases its skill by exactly one point, so $s_1' = s_1 + 1$. What does this mean for the probabilities of winning? We have 
+
+$$
+\frac{p'}{1 - p'} = \mathrm{exp}(s_1' - s_2) = \mathrm{exp}(s_1 + 1 - s_2) = e \ \mathrm{exp}(s_1 - s_2) = e \ \frac{p}{1 - p}
+$$
+
+So adding one point to the skill of a team means its odds of winning are multiplied by $e$, which is roughly 2.7. Below we print a more complete table of win probabilities for a given difference in skill levels.
 
 
+```{r}
+x <- seq(from = -3, to = 3, by = 0.5)
 
+y_logit <- exp(x) / (1 + exp(x))
+
+df <- tibble(skill_diff = x, win_prob = y_logit)
+
+df
+```
+
+
+### Improving the model
+
+As we noticed, teams playing at home tend to win more often than teams playing on the road. We'll add a parameter to the model to take this into account. The mathematical formulation of the model then becomes:
+
+$$
+w_i \sim \mathrm{Bernoulli}(p_i) \\
+p_i = \mathrm{Logit^{-1}}({s_{1i} + h - s_{2i}}) \\
+s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
+h \sim \mathrm{N}(0, 1)
+$$
+
+where the new parameter $h$ denotes the average home-court advantage in the league.
+
+
+```{r compile and fit logit homecourt model, include = FALSE}
+logit_homecourt_stan <- stan_model(file = "./Stan_models/NBA_logit_homecourt.stan")
+
+fit_logit_homecourt <- sampling(logit_homecourt_stan, data = stan_data, iter = n_sims)
+```
+
+```{r analyze logit homecourt model}
+print(fit_logit_homecourt, pars = c("team_skill", "home_court_advantage"))
+```
+
+Here we see the new predicted skill values of the teams. We also see that playing at home boosts the skill of the home team by approximately 0.40 points, which means its odds of winning are multiplied by about 1.5.
+
+
+```{r posterior predictive check logit homecourt model}
+y_rep_logit_hc <- as.matrix(fit_logit_homecourt, pars = "home_win_rep")
+
+ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_logit_hc[1:400, ])
+```
+
+In terms of re-predicting the data, this model does a lot better. One final improvement we might try is to give each team its own home-court advantage. This model can be expressed in the following set of equations.
+
+$$
+w_i \sim \mathrm{Bernoulli}(p_i) \\
+p_i = \mathrm{Logit^{-1}}({s_{1i} + h_1 - s_{2i}}) \\
+s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
+\forall j: h_j \sim \mathrm{N}(0, 1)
+$$
+
+
+```{r compile and fit logit home vector model, include = FALSE}
+logit_home_vector_stan <- stan_model(file = "./Stan_models/NBA_logit_home_vector.stan")
+
+fit_logit_home_vector <- sampling(logit_home_vector_stan, data = stan_data, iter = n_sims)
+```
+
+```{r analyze logit home vector model}
+print(fit_logit_home_vector, pars = c("team_skill", "home_court_advantage"))
+```
+
+Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings).
+
+
+```{r posterior predictive check logit home vector model}
+y_rep_logit_hv <- as.matrix(fit_logit_home_vector, pars = "home_win_rep")
+
+ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_logit_hv[1:400, ])
+```
+
+This model seems about as good as the previous one at re-predicting the data.
 
 
 ## Modeling the season as a time series
