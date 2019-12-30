@@ -141,7 +141,7 @@ stan_data <- list(
 First we'll try to fit a model to all games at once.
 
 ```{r compile and fit base bernoulli logit model, include = FALSE}
-bern_logit_stan <- stan_model(file = "./Stan_models/NBA_base_bernoulli_logit_win_prob.stan")
+bern_logit_stan <- stan_model(file = "./Stan_models/NBA_base_logit_win_prob.stan")
 
 fit_bern_logit <- sampling(bern_logit_stan, data = stan_data, iter = n_sims)
 ```
@@ -165,7 +165,7 @@ Here we see that outcomes are less symmetric than in our assumptions - home team
 
 
 ```{r compile and fit normal win probability model, include = FALSE}
-normal_winprob_stan <- stan_model(file = "./Stan_models/NBA_base_normal_win_prob.stan")
+normal_winprob_stan <- stan_model(file = "./Stan_models/NBA_base_probit_win_prob.stan")
 
 fit_normal_winprob <- sampling(normal_winprob_stan, data = stan_data, iter = n_sims)
 ```
