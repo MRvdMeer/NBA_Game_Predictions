@@ -155,7 +155,7 @@ Here we see that outcomes are less symmetric than in our assumptions - home team
 
 So far we've looked at the estimated skill values the model, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team, but their estimated skill difference over the San Antonio Spurs (team 27) is `1.45 - 1.06 = 0.39`. What does this mean?
 
-First, note that $\mathrm{Logit}(p) = \mathrm{log} \frac{p}{1 - p}$, which is the logarithm of the odds of winning, and so if $s_1 - s_2 = \mathrm{Logit}(p)$ then $\frac{p}{1 - p} = \mathrm{exp}(s_1 - s_2)$. So if $s_1 = s_2$ then $p = 1 - p$ and both teams have a 50 percent probability of winning.
+First, note that $\mathrm{Logit}(p) = \mathrm{log} \frac{p}{1 - p}$, which is the logarithm of the odds ratio of winning, and so if $s_1 - s_2 = \mathrm{Logit}(p)$ then $\frac{p}{1 - p} = \mathrm{exp}(s_1 - s_2)$. So if $s_1 = s_2$ then $p = 1 - p$ and both teams have a 50 percent probability of winning.
 
 In general, suppose we have team skills $s_1$ and $s_2$, and now team 1 increases its skill by exactly one point, so $s_1' = s_1 + 1$. What does this mean for the probabilities of winning? We have 
 
@@ -163,7 +163,7 @@ $$
 \frac{p'}{1 - p'} = \mathrm{exp}(s_1' - s_2) = \mathrm{exp}(s_1 + 1 - s_2) = e \ \mathrm{exp}(s_1 - s_2) = e \ \frac{p}{1 - p}
 $$
 
-So adding one point to the skill of a team means its odds of winning are multiplied by $e$, which is roughly 2.7. Below we print a more complete table of win probabilities for a given difference in skill levels.
+So adding one point to the skill of a team means its odds ratio of winning are multiplied by $e$, which is roughly 2.7. Below we print a more complete table of win probabilities for a given difference in skill levels.
 
 
 ```{r}
@@ -201,7 +201,7 @@ fit_logit_homecourt <- sampling(logit_homecourt_stan, data = stan_data, iter = n
 print(fit_logit_homecourt, pars = c("team_skill", "home_court_advantage"))
 ```
 
-Here we see the new predicted skill values of the teams. We also see that playing at home boosts the skill of the home team by approximately 0.40 points, which means its odds of winning are multiplied by about 1.5.
+Here we see the new predicted skill values of the teams. We also see that playing at home boosts the skill of the home team by approximately 0.40 points, which means its odds ratio of winning are multiplied by about 1.5.
 
 
 ```{r posterior predictive check logit homecourt model}
