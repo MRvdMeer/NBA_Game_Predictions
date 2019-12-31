@@ -51,7 +51,7 @@ compute_predicted_outcome <- function(prediction) {
   sign(round(col_means))
 }
 
-print_stanfit_custom_name <- function(stanfit, regpattern, replace_by, ..., ndigits = 3, verbose = TRUE) {
+print_stanfit_custom_name <- function(stanfit, regpattern, replace_by, ..., ndigits = 2, verbose = TRUE) {
   temp <- summary(stanfit, ...)
   tempsum <- temp$summary
   rn <- rownames(tempsum)
@@ -75,7 +75,8 @@ print_stanfit_custom_name <- function(stanfit, regpattern, replace_by, ..., ndig
         "total post-warmup draws=", sum(n_kept), ".\n\n", sep = '')
   }
   
-  print(tempsum, digits = ndigits)
+  tempsum[, "n_eff"] <- round(tempsum[, "n_eff"], 0)
+  print(round(tempsum, digits = ndigits))
   
   if (verbose) {
     cat("\nSamples were drawn using ", sampler, " at ", stanfit@date, ".\n",

@@ -135,7 +135,8 @@ fit_logit_winprob <- sampling(logit_winprob_stan, data = stan_data, iter = n_sim
 ```
 
 ```{r analyze base logit model}
-print(fit_logit_winprob, pars = c("team_skill"))
+#print(fit_logit_winprob, pars = c("team_skill"))
+print_stanfit_custom_name(fit_logit_winprob, regpattern = "team_skill", replace_by = unique_teams, pars = c("team_skill"))
 ```
 
 This table shows the estimated team skills for all the teams. We can see that team 10 (the Golden State Warriors) has the highest estimated skill and team 3 (the Brooklyn Nets) has the lowest. This is not a surprise - these are the teams with the highest and lowest win totals in the 2016-2017 season, respectively.
@@ -198,7 +199,8 @@ fit_logit_homecourt <- sampling(logit_homecourt_stan, data = stan_data, iter = n
 ```
 
 ```{r analyze logit homecourt model}
-print(fit_logit_homecourt, pars = c("team_skill", "home_court_advantage"))
+#print(fit_logit_homecourt, pars = c("team_skill", "home_court_advantage"))
+print_stanfit_custom_name(fit_logit_homecourt, regpattern = "team_skill", replace_by = unique_teams, pars = c("team_skill", "home_court_advantage"))
 ```
 
 Here we see the new predicted skill values of the teams. We also see that playing at home boosts the skill of the home team by approximately 0.40 points, which means its odds ratio of winning are multiplied by about 1.5.
@@ -228,6 +230,9 @@ fit_logit_home_vector <- sampling(logit_home_vector_stan, data = stan_data, iter
 
 ```{r analyze logit home vector model}
 print(fit_logit_home_vector, pars = c("team_skill", "home_court_advantage"))
+print_stanfit_custom_name(fit_logit_home_vector, regpattern = "team_skill|home_court_advantage",
+                          replace_by = paste0(unique_teams, c(rep("", length(unique_teams)), rep("_HCA", length(unique_teams)))),
+                          pars = c("team_skill", "home_court_advantage"))
 ```
 
 Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings).
