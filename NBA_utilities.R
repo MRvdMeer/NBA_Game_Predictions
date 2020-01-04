@@ -47,6 +47,30 @@ compute_predicted_outcome <- function(prediction) {
   # predictions is a matrix [iterations x parameters]
   # for each predicted game, outcome is one of 
   # -1 (home team wins), 0 (overtime) or 1 (away team wins)
+  
+  # Example call!
+  
+  # library(tidyverse)
+  # library(rstan)
+  # options(mc.cores = parallel::detectCores())
+  # rstan_options(auto_write = TRUE)
+  # set.seed(12)
+  #
+  # data <- read_csv(".\\HMMpractice\\MSCI_US_regime_switching_model.csv")
+  #
+  # y <- data$return
+  # N_states <- 2
+  #
+  # stan_data_hmm <- list(T = length(y),
+  #                       N_states = N_states,
+  #                       y = y)
+  #
+  #
+  # hiddenmarkovmodel <- stan_model(".\\HMMpractice\\HMMorderedsigma.stan")
+  #
+  # fit_hmm <- sampling(hiddenmarkovmodel, data = stan_data_hmm, iter = 5000, chains = 4)
+  #
+  # print_stanfit_custom_name(fit_hmm, "theta", paste("test", 1:4), pars = c("mu", "sigma", "theta"))
   col_means <- colMeans(prediction)
   sign(round(col_means))
 }
@@ -88,27 +112,21 @@ print_stanfit_custom_name <- function(stanfit, regpattern, replace_by, ..., ndig
   invisible(stanfit)
 }
 
+inv_logit <- function(x) {
+  1 / (1 + exp(-x))
+}
 
-# Example call!
+compute_quadratic_loss <- function(predicted, actual) {
+  if ( length(predicted) != length(actual)) {
+    stop("inputs must of of the same length")
+  }
+  sum( (predicted - actual)^2 ) / length(predicted)
+}
 
-# library(tidyverse)
-# library(rstan)
-# options(mc.cores = parallel::detectCores())
-# rstan_options(auto_write = TRUE)
-# set.seed(12)
-#
-# data <- read_csv(".\\HMMpractice\\MSCI_US_regime_switching_model.csv")
-#
-# y <- data$return
-# N_states <- 2
-#
-# stan_data_hmm <- list(T = length(y),
-#                       N_states = N_states,
-#                       y = y)
-#
-#
-# hiddenmarkovmodel <- stan_model(".\\HMMpractice\\HMMorderedsigma.stan")
-#
-# fit_hmm <- sampling(hiddenmarkovmodel, data = stan_data_hmm, iter = 5000, chains = 4)
-#
-# print_stanfit_custom_name(fit_hmm, "theta", paste("test", 1:4), pars = c("mu", "sigma", "theta"))
+compute_log_loss <- function(predicted, actual) {
+  # computes log loss of predictions 
+  if ( length(predicted) != length(actual)) {
+    stop("inputs must of of the same length")
+  }
+  -1 * sum( actual * log(predicted) + (1 - actual) * log(1 - predicted)) / length(predicted)
+}

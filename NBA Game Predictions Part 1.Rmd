@@ -170,9 +170,9 @@ So adding one point to the skill of a team means its odds ratio of winning are m
 ```{r}
 x <- seq(from = -3, to = 3, by = 0.5)
 
-y_logit <- exp(x) / (1 + exp(x))
+win_prob <- inv_logit(x)
 
-df <- tibble(skill_diff = x, win_prob = y_logit)
+df <- tibble(skill_difference = x, win_prob = win_prob)
 
 df
 ```
@@ -216,9 +216,9 @@ In terms of re-predicting the data, this model does a lot better. One final impr
 
 $$
 w_i \sim \mathrm{Bernoulli}(p_i) \\
-p_i = \mathrm{Logit^{-1}}({s_{1i} + h_1 - s_{2i}}) \\
+p_i = \mathrm{Logit^{-1}}({s_{1i} + h_{1i} - s_{2i}}) \\
 s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
-\forall j: h_j \sim \mathrm{N}(0, 1)
+\forall i: h_{1i} \sim \mathrm{N}(0, 1)
 $$
 
 
@@ -229,13 +229,13 @@ fit_logit_home_vector <- sampling(logit_home_vector_stan, data = stan_data, iter
 ```
 
 ```{r analyze logit home vector model}
-print(fit_logit_home_vector, pars = c("team_skill", "home_court_advantage"))
+#print(fit_logit_home_vector, pars = c("team_skill", "home_court_advantage"))
 print_stanfit_custom_name(fit_logit_home_vector, regpattern = "team_skill|home_court_advantage",
-                          replace_by = paste0(unique_teams, c(rep("", length(unique_teams)), rep("_HCA", length(unique_teams)))),
+                          replace_by = paste0(unique_teams, c(rep("", length(unique_teams)), rep(" HCA", length(unique_teams)))),
                           pars = c("team_skill", "home_court_advantage"))
 ```
 
-Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings).
+Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings). Interestingly, there are quite a few teams where home-court advantage is bigger than team skill, or even where team skill is negative and home-court advantage is positive. This model seems to sample better, in the sense that effective sample size is much larger for all parameters than in the previous iterations of this model.
 
 
 ```{r posterior predictive check logit home vector model}
@@ -247,9 +247,76 @@ ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_logit_hv[1:400, ])
 This model seems about as good as the previous one at re-predicting the data.
 
 
+### Using these models to predict actual games.
+
+So far, we have fitted models to the data of the entire season, but in practice we'd like to fit the model to a handful of games and then use the outcome to predict new games. This is relatively simple; after fitting the model to a number of games we can extract the estimates for team skill and home court advantage and use the formula from before to compute the win probabilities: $p_i = \mathrm{Logit^{-1}}({s_{1i} + h_{1i} - s_{2i}})$.
+
+
+```{r fitting models to part of season, include = FALSE}
+N_games_part <- 200
+
+stan_data_part <- list(
+                    N_games = N_games_part,
+                    N_teams = N_teams,
+                    home_win = game_data$home_win[1:N_games_part],
+                    away_team_id = game_data$away_team_id[1:N_games_part],
+                    home_team_id = game_data$home_team_id[1:N_games_part]
+                  )
+
+fit_base_part <- sampling(logit_winprob_stan, data = stan_data_part, iter = n_sims)
+fit_hca_part <- sampling(logit_homecourt_stan, data = stan_data_part, iter = n_sims)
+fit_hv_part <- sampling(logit_home_vector_stan, data = stan_data_part, iter = n_sims)
+```
+
+
+```{r compare win probability estimates for new games}
+x <- summary(fit_base_part, pars = c("team_skill"))$summary[,1]
+skill_est_logit <- x
+
+game_win_prob_logit <- numeric(N_games - N_games_part)
+for (n in (N_games_part+1):N_games) {
+  game_win_prob_logit[n - N_games_part] <- inv_logit( skill_est_logit[game_data$home_team_id[n]] - skill_est_logit[game_data$away_team_id[n]])
+}
+
+quad_loss_logit <- compute_quadratic_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_logit <- compute_log_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
+
+
+x <- summary(fit_hca_part, pars = c("team_skill", "home_court_advantage"))$summary[,1]
+skill_est_hca <- x[1:30]
+hc_est_hca <- x[31]
+
+game_win_prob_hca <- numeric(N_games - N_games_part)
+for (n in (N_games_part+1):N_games) {
+  game_win_prob_hca[n - N_games_part] <- inv_logit( skill_est_hca[game_data$home_team_id[n]] + hc_est_hca - skill_est_hca[game_data$away_team_id[n]])
+}
+
+quad_loss_hca <- compute_quadratic_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_hca <- compute_log_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+
+
+x <- summary(fit_hv_part, pars = c("team_skill", "home_court_advantage"))$summary[,1]
+skill_est_hv <- x[1:30]
+hc_est_hv <- x[31:60]
+
+game_win_prob_hv <- numeric(N_games - N_games_part)
+for (n in (N_games_part+1):N_games) {
+  game_win_prob_hv[n - N_games_part] <- inv_logit( skill_est_hv[game_data$home_team_id[n]] + hc_est_hv[game_data$home_team_id[n]] - skill_est_hv[game_data$away_team_id[n]])
+}
+
+quad_loss_hv <- compute_quadratic_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_hv <- compute_log_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+
+df <- data.frame(quad_loss = c(quad_loss_logit, quad_loss_hca, quad_loss_hv), log_loss = c(log_loss_logit, log_loss_hca, log_loss_hv))
+print(df)
+```
+
+It seems the single team home-court advantage model does slightly better than the other two at predicting out-of-sample data. Still, the difference between the three models is pretty small.
+
+
 ## Modeling the season as a time series
 
-
+So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that 
 
 
 
