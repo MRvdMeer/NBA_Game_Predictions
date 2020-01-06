@@ -30,7 +30,7 @@ parameters {
 
 transformed parameters {
   real team_skill[N_teams, N_games_per_team];
-  vector[N_games] skill_difference;
+  vector[N_games] logit_prob_home_win;
   
   for (n in 1:N_teams) {
     team_skill[n, 1] = init_scale * team_skill_raw[n, 1];
@@ -42,8 +42,8 @@ transformed parameters {
   // since away team and home team might have already played a different
   // number of games this complicated setup with the counters is necessary.
   for (n in 1:N_games){
-    skill_difference[n] = team_skill[home_team_id[n], home_counter[n]]
-    - team_skill[away_team_id[n], away_counter[n]];
+    logit_prob_home_win[n] = team_skill[home_team_id[n], home_counter[n]]
+    - team_skill[away_team_id[n], away_counter[n]] + home_court_advantage;
   }
 }
 
@@ -59,12 +59,12 @@ model {
   
   // likelihood
   #home_win ~ bernoulli_logit(skill_difference + rep_vector(home_court_advantage, N_games));
-  home_win ~ bernoulli_logit(skill_difference + home_court_advantage);
+  home_win ~ bernoulli_logit(logit_prob_home_win);
 }
 
 generated quantities {
   int home_win_rep[N_games];
   for (n in 1:N_games) {
-    home_win_rep[n] = bernoulli_logit_rng(skill_difference[n] + home_court_advantage);
+    home_win_rep[n] = bernoulli_logit_rng(logit_prob_home_win[n]);
   }
 }

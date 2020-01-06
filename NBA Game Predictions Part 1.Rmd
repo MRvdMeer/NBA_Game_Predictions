@@ -333,6 +333,11 @@ Also, we can see that converting probability forecasts into simple win / loss pr
 So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that re-estimates every teams skill after each game they play. In this case we will only expand on the simple home-court advantage model, as it predicts slightly better than the other two models.
 
 
+
+EXPLAIN THE MODEL IN EQUATIONS HERE.
+
+
+
 ```{r setting up data for time-series model}
 stan_data_ts <- list(
   N_games = N_games,
@@ -356,6 +361,7 @@ fit_home_ts <- sampling(logit_home_ts_stan, data = stan_data_ts, iter = n_sims)
 print(fit_home_ts, pars = c("home_court_advantage", "init_scale", "update_scale"))
 ```
 
+The `home_court_advantage` parameter has the same effect as previously - it's a constant that gets added to the home team's skill parameter at every game. The `init_scale` parameter indicates how team's skills are distributed initially (roughly in the interval $[-2 * init\_scale, 2 * init\_scale]$), while `update_scale` indicates how much skill values can generally change from game to game.
 
 
 ```{r extract skill over time, include = FALSE}
@@ -397,5 +403,6 @@ final_mean_skill %>% filter(team_name %in% ranked_teams$team_name[25:30]) %>%
 
 
 ### Predicting with the time-series model
+
 
 
