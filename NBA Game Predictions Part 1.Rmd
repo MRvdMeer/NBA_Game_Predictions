@@ -229,7 +229,6 @@ fit_logit_home_vector <- sampling(logit_home_vector_stan, data = stan_data, iter
 ```
 
 ```{r analyze logit home vector model}
-#print(fit_logit_home_vector, pars = c("team_skill", "home_court_advantage"))
 print_stanfit_custom_name(fit_logit_home_vector, regpattern = "team_skill|home_court_advantage",
                           replace_by = paste0(unique_teams, c(rep("", length(unique_teams)), rep(" HCA", length(unique_teams)))),
                           pars = c("team_skill", "home_court_advantage"))
@@ -250,6 +249,8 @@ This model seems about as good as the previous one at re-predicting the data.
 ### Using these models to predict actual games.
 
 So far, we have fitted models to the data of the entire season, but in practice we'd like to fit the model to a handful of games and then use the outcome to predict new games. This is relatively simple; after fitting the model to a number of games we can extract the estimates for team skill and home court advantage and use the formula from before to compute the win probabilities: $p_i = \mathrm{Logit^{-1}}({s_{1i} + h_{1i} - s_{2i}})$.
+
+We will evaluate these estimated win probabilities using a couple of loss functions. Without going into detail, the lower the loss, the better the prediction. In addition to these estimated probabilities we will also look at what happens when we convert a win probability into a "true / false" win prediction. In this case we estimate that the home win will win (i.e. has a probability of 1 of winning) when the simple home-court advantage model gives it a win probability greater than 0.5.
 
 
 ```{r fitting models to part of season, include = FALSE}
@@ -307,18 +308,94 @@ for (n in (N_games_part+1):N_games) {
 quad_loss_hv <- compute_quadratic_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
 log_loss_hv <- compute_log_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
 
-df <- data.frame(quad_loss = c(quad_loss_logit, quad_loss_hca, quad_loss_hv), log_loss = c(log_loss_logit, log_loss_hca, log_loss_hv))
+
+game_win_pred_hca <- numeric(N_games - N_games_part)
+for (n in (N_games_part+1):N_games) {
+  game_win_pred_hca[n - N_games_part] <- (inv_logit( skill_est_hca[game_data$home_team_id[n]] + hc_est_hca - skill_est_hca[game_data$away_team_id[n]]) > 0.5 )
+}
+
+quad_loss_pred <- compute_quadratic_loss( game_win_pred_hca, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_pred <- compute_log_loss( game_win_pred_hca, game_data$home_win[(N_games_part+1):N_games] )
+
+
+df <- data.frame(quad_loss = c(quad_loss_logit, quad_loss_hca, quad_loss_hv, quad_loss_pred), log_loss = c(log_loss_logit, log_loss_hca, log_loss_hv, log_loss_pred))
+
 print(df)
 ```
 
 It seems the single team home-court advantage model does slightly better than the other two at predicting out-of-sample data. Still, the difference between the three models is pretty small.
 
+Also, we can see that converting probability forecasts into simple win / loss predictions does clearly worse than any of these models. It has a much higher quadratic loss, and its log loss is infinite, because the log loss penalizes a wrong prediction extremely (i.e. a single prediction of the home team winning while it actually loses leads to a loss of intinity).
+
 
 ## Modeling the season as a time series
 
-So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that 
+So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that re-estimates every teams skill after each game they play. In this case we will only expand on the simple home-court advantage model, as it predicts slightly better than the other two models.
+
+
+```{r setting up data for time-series model}
+stan_data_ts <- list(
+  N_games = N_games,
+  N_teams = N_teams,
+  N_games_per_team = N_games_per_team,
+  home_win = game_data$home_win,
+  away_team_id = game_data$away_team_id,
+  home_team_id = game_data$home_team_id
+)
+```
+
+
+```{r fitting time-series model, include = FALSE}
+logit_home_ts_stan <- stan_model(file = "./Stan_models/NBA_logit_home_ts.stan")
+
+fit_home_ts <- sampling(logit_home_ts_stan, data = stan_data_ts, iter = n_sims)
+```
+
+
+```{r analyze time-series model}
+print(fit_home_ts, pars = c("home_court_advantage", "init_scale", "update_scale"))
+```
 
 
 
+```{r extract skill over time, include = FALSE}
+team_skill <- extract(fit_home_ts, pars = "team_skill", permuted = TRUE)
+team_skill <- team_skill[[1]]
+mean_skill <- apply(team_skill, c(2, 3), mean) %>% as_tibble() %>% mutate(team_name = team_mapping_table$team_name)
+median_skill <- apply(team_skill, c(2, 3), median) %>% as_tibble() %>% mutate(team_name = team_mapping_table$team_name)
+upper_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.96)) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
+lower_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.04)) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
+```
+
+```{r analyze skill over time for Poisson model}
+final_mean_skill <- mean_skill %>% gather(key = "game", value = "skill", -team_name) %>%
+  mutate(game_number = as.numeric(substring(game, first = 2)))
+
+ranked_teams <- final_mean_skill %>% group_by(team_name) %>% 
+  summarize(mean_skill = round(mean(skill), 2),
+            median_skill = round(median(skill), 2),
+            max_skill = round(max(skill), 2),
+            min_skill = round(min(skill), 2)) %>%
+  arrange(desc(mean_skill))
+ 
+print(ranked_teams, n = 30, digits = 2)
+
+final_mean_skill %>% filter(team_name %in% ranked_teams$team_name[1:6]) %>% 
+  ggplot(mapping = aes(x = game_number, y = skill, color = team_name)) +
+  geom_line() + scale_color_brewer(type = "qual", palette = 3) +
+  ggtitle("Top Teams in 2016-2017")
+
+final_mean_skill %>% filter(team_name %in% ranked_teams$team_name[25:30]) %>% 
+  ggplot(mapping = aes(x = game_number, y = skill, color = team_name)) +
+  geom_line() + scale_color_brewer(type = "qual", palette = 3) +
+  ggtitle("Bottom Teams in 2016-2017")
+
+
+```
+
+
+
+
+### Predicting with the time-series model
 
 

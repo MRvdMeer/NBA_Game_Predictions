@@ -27,7 +27,7 @@ model {
 }
 
 generated quantities {
-  real home_win_rep[N_games];
+  int home_win_rep[N_games];
   for (n in 1:N_games) {
     home_win_rep[n] = bernoulli_logit_rng(logit_prob_home_win[n]);
   }
