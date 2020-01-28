@@ -271,6 +271,67 @@ fit_hv_part <- sampling(logit_home_vector_stan, data = stan_data_part, iter = n_
 
 
 ```{r compare win probability estimates for new games}
+games_not_played <- game_data[(N_games_part+1):N_games,]
+N_games_unplayed <- nrow(games_not_played)
+
+post <- extract(fit_base_part, pars = c("team_skill"), permuted = TRUE)
+
+home_win_prob_base <- numeric(N_games_unplayed)
+for (n in 1:N_games_unplayed) {
+    home_win_prob_base[n] <- mean(
+        inv_logit(
+            post$team_skill[, games_not_played$home_team_id[n]] -
+                post$team_skill[, games_not_played$away_team_id[n]]
+            )
+    )
+}
+
+games_not_played$home_win_prob_base <- home_win_prob_base
+
+
+
+
+post <- extract(fit_hca_part, pars = c("team_skill", "home_court_advantage"), permuted = TRUE)
+
+home_win_prob_hca <- numeric(N_games_unplayed)
+for (n in 1:N_games_unplayed) {
+    home_win_prob_hca[n] <- mean(
+        inv_logit(
+            post$team_skill[, games_not_played$home_team_id[n]] + post$home_court_advantage -
+                post$team_skill[, games_not_played$away_team_id[n]]
+            )
+    )
+}
+
+games_not_played$home_win_prob_hca <- home_win_prob_hca
+
+
+
+
+post <- extract(fit_hv_part, pars = c("team_skill", "home_court_advantage"), permuted = TRUE)
+
+home_win_prob_hv <- numeric(N_games_unplayed)
+for (n in 1:N_games_unplayed) {
+    home_win_prob_hv[n] <- mean(
+        inv_logit(
+            post$team_skill[, games_not_played$home_team_id[n]] + post$home_court_advantage[, games_not_played$home_team_id[n]] -
+                post$team_skill[, games_not_played$away_team_id[n]]
+            )
+    )
+}
+
+games_not_played$home_win_prob_hv <- home_win_prob_hv
+
+
+
+```
+
+
+
+Below is an old section that will need to be cleaned up at some point.
+
+
+```{r old section on comparing win probabilities, but NOT in a full Bayesian way}
 x <- summary(fit_base_part, pars = c("team_skill"))$summary[,1]
 skill_est_logit <- x
 
@@ -330,7 +391,7 @@ Also, we can see that converting probability forecasts into simple win / loss pr
 
 ## Modeling the season as a time series
 
-So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that re-estimates every teams skill after each game they play. In this case we will only expand on the simple home-court advantage model, as it predicts slightly better than the other two models.
+So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that re-estimates every team's skill after each game they play. In this case we will only expand on the simple home-court advantage model, as it predicts slightly better than the other two models.
 
 
 
