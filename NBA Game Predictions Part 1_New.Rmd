@@ -1,0 +1,469 @@
+---
+title: "NBA Game Predictions Part 1"
+output: html_notebook
+---
+
+
+$$
+y_i \sim \mathrm{N}(\mu_i, \sigma) \\
+\mu_i = \alpha_{k[i]} + \beta_{k[i]} * x_i \\
+\left[\begin{array}{cc}
+\alpha_k\\
+\beta_k
+\end{array}\right] 
+\sim \mathrm{N}_2(\boldsymbol{\mu, {S}}) \\
+\alpha \sim \mathrm{N}(0, 10) \\
+\beta \sim \mathrm{N}(0, 1) \\
+\boldsymbol{S} = 
+\left(\begin{array}{cc}
+\sigma_\alpha & 0 \\
+0 & \sigma_\beta
+\end{array}\right) C 
+\left(\begin{array}{cc}
+\sigma_\alpha & 0 \\
+0 & \sigma_\beta
+\end{array}\right) \\
+(\sigma_\alpha, \sigma_\beta) \sim \mathrm{HalfCauchy}(0, 1) \\
+C \sim \mathrm{LKJcorr}(2)
+$$
+
+
+# Introduction
+
+In this series of notebooks we will build some statistical models to model the outcome of NBA games. We will then try to use these models to predict the outcomes of new NBA games.
+
+In this part we will try to model the winner of a game directly. We'll start with the simplest possible model and slowly add complexity to model specific aspects of a basketball game.
+
+In the next parts we will try a number of alternative approaches and eventually see which one works best.
+
+
+# Introduction to Inference: Probablistic description of a basketball game
+
+The outcome of a basketball game is uncertain. While we might know in advance which team is more likely to win, we can never be sure until the final buzzer has sounded. Because of this uncertainty we will describe basketball games using *probabilistic models*. This class of models uses probability distributions to describe the process that generates our data (i.e. the wins and losses of basketball teams). As a first step we need to state the assumptions that we use to describe a basketball game. Then we use probability distribution to describe all the steps that have any kind of uncertainty.
+
+A very simple set of assumptions of how to model a basketball game is as follows:
+
+- every team has a certain skill level, which we cannot observe, which we will describe using a real-valued parameter
+- the outcome of a basketball game is a random process that only depends on the difference between the skill levels of the two teams
+
+Putting these assumptions into a set of equations with probability distributions might look as follows:
+
+$$
+w_i \sim \mathrm{Bernoulli}(p_i) \\
+p_i = \mathrm{Logit^{-1}}({s_{1i} - s_{2i}}) \\
+s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
+$$
+
+Here $w_i$ denotes the winner of game $i$, and $s_{1i}$ and $s_{2i}$ denote the skill parameters of the two teams in game $i$. This essentially means that each basketball game is simplified to a single coin flip, where the probability of landing heads (i.e. the home team winning) is a function of the two skill levels of the teams.
+
+This will be the our most basic model of a basketball game.
+
+When our assumptions are explicitly encoded into a model, we can combine the model with observations to learn more about the parameters. This process is called *inference*.
+
+For example, if team 1 won the game, we would infer that $s_1$ is likely greater than $s_2$. In particular, we started off with a probability distribution for these parameters which was identical, and combining this distribution with data will yield a new probability distribution for the parameters, which is called the *posterior* distribution. In these notebooks we will use a language called Stan to calculate the posterior distribution for us.
+
+Still, the amount that can be learned from a single game is limited. In our NBA example, we'd like to analyze the outcomes of many games, so that we can more accurately learn the skill levels of all the teams.
+
+
+# Initial setup
+
+```{r load packages and further setup, message=FALSE, include=FALSE}
+library(tidyverse)
+library(cmdstanr)
+library(bayesplot)
+
+theme_set(bayesplot::theme_default())
+
+options(mc.cores = parallel::detectCores())
+
+source("./NBA_utilities.R")
+
+set.seed(12)
+```
+
+
+```{r load data and some data manipulation, include = FALSE}
+game_data <- read_csv("./NBA Game Data 20162017.csv")
+game_data <- game_data %>% 
+                select(date = Date, away_team = "Visitor/Neutral", home_team = "Home/Neutral", pts_away = PTS_A, pts_home = PTS_H, overtime = OT) %>%
+                mutate(overtime = ifelse (is.na(overtime), 0L, 
+                                          ifelse(stringr::str_length(overtime) == 2, 1L, as.integer(substring(overtime, 1, 1)))),
+                       score_diff = ifelse(overtime == 0, pts_away - pts_home, 0L),
+                       home_win = ifelse(pts_away - pts_home < 0, 1L, 0L))
+
+# create a single identifier used for both away and home teams
+unique_teams <- sort(unique(c(game_data$away_team, game_data$home_team)))
+team_mapping_table <- tibble(team_name = unique_teams, team_id = 1:length(unique_teams))
+
+team_id <- map_int(c(game_data$away_team, game_data$home_team), lookup_team_id, mapping_table = team_mapping_table)
+N_games <- nrow(game_data)
+N_teams = length(team_mapping_table$team_id)
+game_data <- game_data %>% mutate(away_team_id = team_id[1:N_games], home_team_id = team_id[(N_games + 1):(2 * N_games)])
+N_games_per_team <- 82
+n_sims <- 10000
+```
+
+
+# Some quick data exploration
+
+
+```{r}
+str(game_data)
+```
+
+
+# Modeling game outcomes with Stan
+
+```{r set up data for Stan}
+stan_data <- list(
+                    N_games = N_games,
+                    N_teams = N_teams,
+                    home_win = game_data$home_win,
+                    away_team_id = game_data$away_team_id,
+                    home_team_id = game_data$home_team_id
+                  )
+```
+
+
+## Modeling the season as a whole
+
+
+```{r compile and fit base logit model, include = FALSE}
+logit_winprob_stan <- stan_model(file = "./Stan_models/NBA_base_logit_win_prob.stan")
+
+fit_logit_winprob <- sampling(logit_winprob_stan, data = stan_data, iter = n_sims)
+```
+
+```{r analyze base logit model}
+#print(fit_logit_winprob, pars = c("team_skill"))
+print_stanfit_custom_name(fit_logit_winprob, regpattern = "team_skill", replace_by = unique_teams, pars = c("team_skill"))
+```
+
+This table shows the estimated team skills for all the teams. We can see that team 10 (the Golden State Warriors) has the highest estimated skill and team 3 (the Brooklyn Nets) has the lowest. This is not a surprise - these are the teams with the highest and lowest win totals in the 2016-2017 season, respectively.
+
+
+```{r posterior predictive check base logit model}
+y_rep_logit <- as.matrix(fit_logit_winprob, pars = "home_win_rep")
+
+ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_logit[1:400, ])
+```
+
+
+Here we see that outcomes are less symmetric than in our assumptions - home teams tend to win more than away teams, all else being equal. This should not come as a big surprise, as the home team tends to have a small but noticable advantage in basketball. We'll keep this in mind when trying to improve our model.
+
+
+### Interpreting parameter values
+
+So far we've looked at the estimated skill values the model, but we haven't really tried to interpret the values of those estimates. For example, we've seen that the Golden State Warriors are estimated to be the best team, but their estimated skill difference over the San Antonio Spurs (team 27) is `1.45 - 1.06 = 0.39`. What does this mean?
+
+First, note that $\mathrm{Logit}(p) = \mathrm{log} \frac{p}{1 - p}$, which is the logarithm of the odds ratio of winning, and so if $s_1 - s_2 = \mathrm{Logit}(p)$ then $\frac{p}{1 - p} = \mathrm{exp}(s_1 - s_2)$. So if $s_1 = s_2$ then $p = 1 - p$ and both teams have a 50 percent probability of winning.
+
+In general, suppose we have team skills $s_1$ and $s_2$, and now team 1 increases its skill by exactly one point, so $s_1' = s_1 + 1$. What does this mean for the probabilities of winning? We have 
+
+$$
+\frac{p'}{1 - p'} = \mathrm{exp}(s_1' - s_2) = \mathrm{exp}(s_1 + 1 - s_2) = e \ \mathrm{exp}(s_1 - s_2) = e \ \frac{p}{1 - p}
+$$
+
+So adding one point to the skill of a team means its odds ratio of winning are multiplied by $e$, which is roughly 2.7. Below we print a more complete table of win probabilities for a given difference in skill levels.
+
+
+```{r}
+x <- seq(from = -3, to = 3, by = 0.5)
+
+win_prob <- inv_logit(x)
+
+df <- tibble(skill_difference = x, win_prob = win_prob)
+
+df
+```
+
+
+### Improving the model
+
+As we noticed, teams playing at home tend to win more often than teams playing on the road. We'll add a parameter to the model to take this into account. The mathematical formulation of the model then becomes:
+
+$$
+w_i \sim \mathrm{Bernoulli}(p_i) \\
+p_i = \mathrm{Logit^{-1}}({s_{1i} + h - s_{2i}}) \\
+s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
+h \sim \mathrm{N}(0, 1)
+$$
+
+where the new parameter $h$ denotes the average home-court advantage in the league.
+
+
+```{r compile and fit logit homecourt model, include = FALSE}
+logit_homecourt_stan <- stan_model(file = "./Stan_models/NBA_logit_homecourt.stan")
+
+fit_logit_homecourt <- sampling(logit_homecourt_stan, data = stan_data, iter = n_sims)
+```
+
+```{r analyze logit homecourt model}
+#print(fit_logit_homecourt, pars = c("team_skill", "home_court_advantage"))
+print_stanfit_custom_name(fit_logit_homecourt, regpattern = "team_skill", replace_by = unique_teams, pars = c("team_skill", "home_court_advantage"))
+```
+
+Here we see the new predicted skill values of the teams. We also see that playing at home boosts the skill of the home team by approximately 0.40 points, which means its odds ratio of winning are multiplied by about 1.5.
+
+
+```{r posterior predictive check logit homecourt model}
+y_rep_logit_hc <- as.matrix(fit_logit_homecourt, pars = "home_win_rep")
+
+ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_logit_hc[1:400, ])
+```
+
+In terms of re-predicting the data, this model does a lot better. One final improvement we might try is to give each team its own home-court advantage. This model can be expressed in the following set of equations.
+
+$$
+w_i \sim \mathrm{Bernoulli}(p_i) \\
+p_i = \mathrm{Logit^{-1}}({s_{1i} + h_{1i} - s_{2i}}) \\
+s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
+\forall i: h_{1i} \sim \mathrm{N}(0, 1)
+$$
+
+
+```{r compile and fit logit home vector model, include = FALSE}
+logit_home_vector_stan <- stan_model(file = "./Stan_models/NBA_logit_home_vector.stan")
+
+fit_logit_home_vector <- sampling(logit_home_vector_stan, data = stan_data, iter = n_sims)
+```
+
+```{r analyze logit home vector model}
+print_stanfit_custom_name(fit_logit_home_vector, regpattern = "team_skill|home_court_advantage",
+                          replace_by = paste0(unique_teams, c(rep("", length(unique_teams)), rep(" HCA", length(unique_teams)))),
+                          pars = c("team_skill", "home_court_advantage"))
+```
+
+Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings). Interestingly, there are quite a few teams where home-court advantage is bigger than team skill, or even where team skill is negative and home-court advantage is positive. This model seems to sample better, in the sense that effective sample size is much larger for all parameters than in the previous iterations of this model.
+
+
+```{r posterior predictive check logit home vector model}
+y_rep_logit_hv <- as.matrix(fit_logit_home_vector, pars = "home_win_rep")
+
+ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_logit_hv[1:400, ])
+```
+
+This model seems about as good as the previous one at re-predicting the data.
+
+
+### Using these models to predict actual games.
+
+So far, we have fitted models to the data of the entire season, but in practice we'd like to fit the model to a handful of games and then use the outcome to predict new games. This is relatively simple; after fitting the model to a number of games we can extract the estimates for team skill and home court advantage and use the formula from before to compute the win probabilities: $p_i = \mathrm{Logit^{-1}}({s_{1i} + h_{1i} - s_{2i}})$.
+
+We will evaluate these estimated win probabilities using a couple of loss functions. Without going into detail, the lower the loss, the better the prediction. In addition to these estimated probabilities we will also look at what happens when we convert a win probability into a "true / false" win prediction. In this case we estimate that the home win will win (i.e. has a probability of 1 of winning) when the simple home-court advantage model gives it a win probability greater than 0.5.
+
+
+```{r fitting models to part of season, include = FALSE}
+N_games_part <- 200
+
+stan_data_part <- list(
+                    N_games = N_games_part,
+                    N_teams = N_teams,
+                    home_win = game_data$home_win[1:N_games_part],
+                    away_team_id = game_data$away_team_id[1:N_games_part],
+                    home_team_id = game_data$home_team_id[1:N_games_part]
+                  )
+
+fit_base_part <- sampling(logit_winprob_stan, data = stan_data_part, iter = n_sims)
+fit_hca_part <- sampling(logit_homecourt_stan, data = stan_data_part, iter = n_sims)
+fit_hv_part <- sampling(logit_home_vector_stan, data = stan_data_part, iter = n_sims)
+```
+
+
+```{r compare win probability estimates for new games}
+games_not_played <- game_data[(N_games_part+1):N_games,]
+N_games_unplayed <- nrow(games_not_played)
+
+post <- extract(fit_base_part, pars = c("team_skill"), permuted = TRUE)
+
+home_win_prob_base <- numeric(N_games_unplayed)
+for (n in 1:N_games_unplayed) {
+    home_win_prob_base[n] <- mean(
+        inv_logit(
+            post$team_skill[, games_not_played$home_team_id[n]] -
+                post$team_skill[, games_not_played$away_team_id[n]]
+            )
+    )
+}
+
+games_not_played$home_win_prob_base <- home_win_prob_base
+
+
+
+
+post <- extract(fit_hca_part, pars = c("team_skill", "home_court_advantage"), permuted = TRUE)
+
+home_win_prob_hca <- numeric(N_games_unplayed)
+for (n in 1:N_games_unplayed) {
+    home_win_prob_hca[n] <- mean(
+        inv_logit(
+            post$team_skill[, games_not_played$home_team_id[n]] + post$home_court_advantage -
+                post$team_skill[, games_not_played$away_team_id[n]]
+            )
+    )
+}
+
+games_not_played$home_win_prob_hca <- home_win_prob_hca
+
+
+
+
+post <- extract(fit_hv_part, pars = c("team_skill", "home_court_advantage"), permuted = TRUE)
+
+home_win_prob_hv <- numeric(N_games_unplayed)
+for (n in 1:N_games_unplayed) {
+    home_win_prob_hv[n] <- mean(
+        inv_logit(
+            post$team_skill[, games_not_played$home_team_id[n]] + post$home_court_advantage[, games_not_played$home_team_id[n]] -
+                post$team_skill[, games_not_played$away_team_id[n]]
+            )
+    )
+}
+
+games_not_played$home_win_prob_hv <- home_win_prob_hv
+
+
+
+```
+
+
+
+Below is an old section that will need to be cleaned up at some point.
+
+
+```{r old section on comparing win probabilities, but NOT in a full Bayesian way}
+x <- summary(fit_base_part, pars = c("team_skill"))$summary[,1]
+skill_est_logit <- x
+
+game_win_prob_logit <- numeric(N_games - N_games_part)
+for (n in (N_games_part+1):N_games) {
+  game_win_prob_logit[n - N_games_part] <- inv_logit( skill_est_logit[game_data$home_team_id[n]] - skill_est_logit[game_data$away_team_id[n]])
+}
+
+quad_loss_logit <- compute_quadratic_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_logit <- compute_log_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
+
+
+x <- summary(fit_hca_part, pars = c("team_skill", "home_court_advantage"))$summary[,1]
+skill_est_hca <- x[1:30]
+hc_est_hca <- x[31]
+
+game_win_prob_hca <- numeric(N_games - N_games_part)
+for (n in (N_games_part+1):N_games) {
+  game_win_prob_hca[n - N_games_part] <- inv_logit( skill_est_hca[game_data$home_team_id[n]] + hc_est_hca - skill_est_hca[game_data$away_team_id[n]])
+}
+
+quad_loss_hca <- compute_quadratic_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_hca <- compute_log_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+
+
+x <- summary(fit_hv_part, pars = c("team_skill", "home_court_advantage"))$summary[,1]
+skill_est_hv <- x[1:30]
+hc_est_hv <- x[31:60]
+
+game_win_prob_hv <- numeric(N_games - N_games_part)
+for (n in (N_games_part+1):N_games) {
+  game_win_prob_hv[n - N_games_part] <- inv_logit( skill_est_hv[game_data$home_team_id[n]] + hc_est_hv[game_data$home_team_id[n]] - skill_est_hv[game_data$away_team_id[n]])
+}
+
+quad_loss_hv <- compute_quadratic_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_hv <- compute_log_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+
+
+game_win_pred_hca <- numeric(N_games - N_games_part)
+for (n in (N_games_part+1):N_games) {
+  game_win_pred_hca[n - N_games_part] <- (inv_logit( skill_est_hca[game_data$home_team_id[n]] + hc_est_hca - skill_est_hca[game_data$away_team_id[n]]) > 0.5 )
+}
+
+quad_loss_pred <- compute_quadratic_loss( game_win_pred_hca, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_pred <- compute_log_loss( game_win_pred_hca, game_data$home_win[(N_games_part+1):N_games] )
+
+
+df <- data.frame(quad_loss = c(quad_loss_logit, quad_loss_hca, quad_loss_hv, quad_loss_pred), log_loss = c(log_loss_logit, log_loss_hca, log_loss_hv, log_loss_pred))
+
+print(df)
+```
+
+It seems the single team home-court advantage model does slightly better than the other two at predicting out-of-sample data. Still, the difference between the three models is pretty small.
+
+Also, we can see that converting probability forecasts into simple win / loss predictions does clearly worse than any of these models. It has a much higher quadratic loss, and its log loss is infinite, because the log loss penalizes a wrong prediction extremely (i.e. a single prediction of the home team winning while it actually loses leads to a loss of intinity).
+
+
+## Modeling the season as a time series
+
+So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that re-estimates every team's skill after each game they play. In this case we will only expand on the simple home-court advantage model, as it predicts slightly better than the other two models.
+
+
+
+EXPLAIN THE MODEL IN EQUATIONS HERE.
+
+
+
+```{r setting up data for time-series model}
+stan_data_ts <- list(
+  N_games = N_games,
+  N_teams = N_teams,
+  N_games_per_team = N_games_per_team,
+  home_win = game_data$home_win,
+  away_team_id = game_data$away_team_id,
+  home_team_id = game_data$home_team_id
+)
+```
+
+
+```{r fitting time-series model, include = FALSE}
+logit_home_ts_stan <- stan_model(file = "./Stan_models/NBA_logit_home_ts.stan")
+
+fit_home_ts <- sampling(logit_home_ts_stan, data = stan_data_ts, iter = n_sims)
+```
+
+
+```{r analyze time-series model}
+print(fit_home_ts, pars = c("home_court_advantage", "init_scale", "update_scale"))
+```
+
+The `home_court_advantage` parameter has the same effect as previously - it's a constant that gets added to the home team's skill parameter at every game. The `init_scale` parameter indicates how team's skills are distributed initially (roughly in the interval $[-2 * init\_scale, 2 * init\_scale]$), while `update_scale` indicates how much skill values can generally change from game to game.
+
+
+```{r extract skill over time, include = FALSE}
+team_skill <- extract(fit_home_ts, pars = "team_skill", permuted = TRUE)
+team_skill <- team_skill[[1]]
+mean_skill <- apply(team_skill, c(2, 3), mean) %>% as_tibble() %>% mutate(team_name = team_mapping_table$team_name)
+median_skill <- apply(team_skill, c(2, 3), median) %>% as_tibble() %>% mutate(team_name = team_mapping_table$team_name)
+upper_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.96)) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
+lower_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.04)) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
+```
+
+```{r analyze skill over time for Poisson model}
+final_mean_skill <- mean_skill %>% gather(key = "game", value = "skill", -team_name) %>%
+  mutate(game_number = as.numeric(substring(game, first = 2)))
+
+ranked_teams <- final_mean_skill %>% group_by(team_name) %>% 
+  summarize(mean_skill = round(mean(skill), 2),
+            median_skill = round(median(skill), 2),
+            max_skill = round(max(skill), 2),
+            min_skill = round(min(skill), 2)) %>%
+  arrange(desc(mean_skill))
+ 
+print(ranked_teams, n = 30, digits = 2)
+
+final_mean_skill %>% filter(team_name %in% ranked_teams$team_name[1:6]) %>% 
+  ggplot(mapping = aes(x = game_number, y = skill, color = team_name)) +
+  geom_line() + scale_color_brewer(type = "qual", palette = 3) +
+  ggtitle("Top Teams in 2016-2017")
+
+final_mean_skill %>% filter(team_name %in% ranked_teams$team_name[25:30]) %>% 
+  ggplot(mapping = aes(x = game_number, y = skill, color = team_name)) +
+  geom_line() + scale_color_brewer(type = "qual", palette = 3) +
+  ggtitle("Bottom Teams in 2016-2017")
+
+
+```
+
+
+
+
+### Predicting with the time-series model
+
+
+
