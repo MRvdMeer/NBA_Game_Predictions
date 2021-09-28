@@ -30,23 +30,23 @@ $$
 
 # Introduction
 
-In this series of notebooks we will build some Bayesian models to model the outcome of NBA games. We will then try to use these models to predict the outcomes of new NBA games.
+In this series of notebooks we will build some statistical models to model the outcome of NBA games. We will then try to use these models to predict the outcomes of new NBA games.
 
-In this part we will try to model the winner of a game. We'll start with the simplest possible model and slowly add complexity to model specific aspects of a basketball game.
+In this part we will try to model the winner of a game directly. We'll start with the simplest possible model and slowly add complexity to model specific aspects of a basketball game.
 
 In the next parts we will try a number of alternative approaches and eventually see which one works best.
 
 
 # Introduction to Inference: Probablistic description of a basketball game
 
-The outcome of a basketball game is uncertain. While we might know in advance which team is more likely to win, we can never be sure until the final buzzer has sounded. Because of this uncertainty we will describe basketball games using *probabilistic models*. Describing a game like this will allow us to then perform inference over the quantities of interest.
+The outcome of a basketball game is uncertain. While we might know in advance which team is more likely to win, we can never be sure until the final buzzer has sounded. Because of this uncertainty we will describe basketball games using *probabilistic models*. This class of models uses probability distributions to describe the process that generates our data (i.e. the wins and losses of basketball teams). As a first step we need to state the assumptions that we use to describe a basketball game. Then we use probability distribution to describe all the steps that have any kind of uncertainty.
 
 A very simple set of assumptions of how to model a basketball game is as follows:
 
 - every team has a certain skill level, which we cannot observe, which we will describe using a real-valued parameter
 - the outcome of a basketball game is a random process that only depends on the difference between the skill levels of the two teams
 
-Putting these assumptions into a set of equations might look as follows:
+Putting these assumptions into a set of equations with probability distributions might look as follows:
 
 $$
 w_i \sim \mathrm{Bernoulli}(p_i) \\
@@ -54,7 +54,7 @@ p_i = \mathrm{Logit^{-1}}({s_{1i} - s_{2i}}) \\
 s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
 $$
 
-Here $w_i$ denotes the winner of game $i$, and $s_{1i}$ and $s_{2i}$ denote the skill parameters of the two teams in game $i$. This essentially means that each basketball game is simplified to a single coinflip, where the probability of landing heads (i.e. the home team winning) is a function of the two skill levels of the teams.
+Here $w_i$ denotes the winner of game $i$, and $s_{1i}$ and $s_{2i}$ denote the skill parameters of the two teams in game $i$. This essentially means that each basketball game is simplified to a single coin flip, where the probability of landing heads (i.e. the home team winning) is a function of the two skill levels of the teams.
 
 This will be the our most basic model of a basketball game.
 
