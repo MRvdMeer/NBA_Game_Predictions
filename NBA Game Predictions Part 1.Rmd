@@ -288,7 +288,8 @@ for (n in 1:N_games_unplayed) {
 
 games_not_played$home_win_prob_base <- home_win_prob_base
 
-
+quad_loss_logit <- compute_quadratic_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_logit <- compute_log_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
 
 
 post <- extract(fit_hca_part, pars = c("team_skill", "home_court_advantage"), permuted = TRUE)
@@ -305,7 +306,8 @@ for (n in 1:N_games_unplayed) {
 
 games_not_played$home_win_prob_hca <- home_win_prob_hca
 
-
+quad_loss_hca <- compute_quadratic_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_hca <- compute_log_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
 
 
 post <- extract(fit_hv_part, pars = c("team_skill", "home_court_advantage"), permuted = TRUE)
@@ -322,10 +324,16 @@ for (n in 1:N_games_unplayed) {
 
 games_not_played$home_win_prob_hv <- home_win_prob_hv
 
+quad_loss_hv <- compute_quadratic_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_hv <- compute_log_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
 
+df <- data.frame(quad_loss = c(quad_loss_logit, quad_loss_hca, quad_loss_hv), log_loss = c(log_loss_logit, log_loss_hca, log_loss_hv))
+
+print(df)
 
 ```
 
+All three methods seem to give comparable results in terms of predicting the outcome of the next game. It seems the model with a single home-court advantage parameter does slightly better.
 
 
 Below is an old section that will need to be cleaned up at some point.
@@ -386,7 +394,7 @@ print(df)
 
 It seems the single team home-court advantage model does slightly better than the other two at predicting out-of-sample data. Still, the difference between the three models is pretty small.
 
-Also, we can see that converting probability forecasts into simple win / loss predictions does clearly worse than any of these models. It has a much higher quadratic loss, and its log loss is infinite, because the log loss penalizes a wrong prediction extremely (i.e. a single prediction of the home team winning while it actually loses leads to a loss of intinity).
+Also, we can see that converting probability forecasts into simple win / loss predictions does clearly worse than any of these models. It has a much higher quadratic loss, and its log loss is infinite, because the log loss penalizes a wrong prediction extremely (i.e. a single prediction of the home team winning while it actually loses leads to a loss of infinity).
 
 
 ## Modeling the season as a time series
