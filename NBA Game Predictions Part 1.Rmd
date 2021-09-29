@@ -234,7 +234,7 @@ print_stanfit_custom_name(fit_logit_home_vector, regpattern = "team_skill|home_c
                           pars = c("team_skill", "home_court_advantage"))
 ```
 
-Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings). Interestingly, there are quite a few teams where home-court advantage is bigger than team skill, or even where team skill is negative and home-court advantage is positive. This model seems to sample better, in the sense that effective sample size is much larger for all parameters than in the previous iterations of this model.
+Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings). Interestingly, there are quite a few teams where home-court advantage is bigger than team skill, or even where team skill is negative and home-court advantage is positive. This model seems to sample better, in the sense that effective sample size is much larger for all parameters than in the previous models.
 
 
 ```{r posterior predictive check logit home vector model}

@@ -86,7 +86,7 @@ paste("Variance of home points:", round(var(game_data$pts_home), 2))
 summary(game_data)
 ```
 
-Here we see both the home and away points scored are a bit over-dispersed.
+Here we see both the home and away points scored are a bit over-dispersed when compared to a Poisson distribution.
 
 ```{r some quick plots}
 ggplot(data = game_data, mapping = aes(x = score_diff)) + geom_density(color = "blue")
@@ -685,17 +685,17 @@ The quantiles seem slightly better calibrated, but the win/loss predictions aren
 
 So far we have modeled the score difference only, but now we'll try to directly model the points scored by the home and away teams. First we'll try a Poisson model. We've seen earlier that the points scored seem slighly over-dispersed, so we'll keep that in mind here. We model points scored as a Poisson random variable based on the team (unobserved) skill of the away and home teams. This is not perfect: team skill should not only determine points scored, but also make it more difficult for the opposing team to score. We'll revisit this later; for now we can think of team skill as just ability to score points.
 
-```{r compile and fit Stan Poisson model, include = FALSE}
+```{r __compile and fit Stan Poisson model, include = FALSE}
 stan_model_poisson_comp <- stan_model(file = "Stan_models/NBA_model_poisson.stan")
 
 stan_fit_poisson <- sampling(stan_model_poisson_comp, data = stan_data, iter = n_sims)
 ```
 
-```{r analyze Stan Poisson model}
+```{r __analyze Stan Poisson model}
 print(stan_fit_poisson, pars = c("team_skill", "home_court_advantage"))
 ```
 
-```{r posterior predictive check Poisson model}
+```{r __posterior predictive check Poisson model}
 y_rep_poisson <- as.matrix(stan_fit_poisson, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
 
 ppc_dens_overlay(y = game_data$pts_away, yrep = y_rep_poisson[1:400, 1:N_games])
@@ -705,17 +705,17 @@ ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_poisson[1:400, (2 * N_ga
 
 The Poisson model predicts the points scored quite well, and as a result the difference in points scored too. We'll investigate whether a Negative Binomial model does even better - we noticed some over-dispersion earlier and this might help fix that.
 
-```{r compile and fit Stan Negative Binomial model, include = FALSE}
+```{r __compile and fit Stan Negative Binomial model, include = FALSE}
 stan_model_negbin_comp <- stan_model(file = "Stan_models/NBA_model_negbin.stan")
 
 stan_fit_negbin <- sampling(stan_model_negbin_comp, data = stan_data, iter = n_sims)
 ```
 
-```{r analyze Stan Negative Binomial model}
+```{r __analyze Stan Negative Binomial model}
 print(stan_fit_negbin, pars = c("team_skill", "home_court_advantage", "precision"))
 ```
 
-```{r posterior predictive check Negative Binomial model}
+```{r __posterior predictive check Negative Binomial model}
 y_rep_negbin <- as.matrix(stan_fit_negbin, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
 
 ppc_dens_overlay(y = game_data$pts_away, yrep = y_rep_negbin[1:400, 1:N_games])
@@ -731,7 +731,7 @@ Another thing that may be improved is that we don't use the overtime variable an
 
 Finally, we might introduce separate parameters for offensive and defensive skill.
 
-```{r compile and fit Stan Poisson Home Vector model, include = FALSE}
+```{r __compile and fit Stan Poisson Home Vector model, include = FALSE}
 stan_model_poisson_hv_comp <- stan_model(file = "Stan_models/NBA_model_poisson_home_vector.stan")
 
 stan_fit_poisson_hv <- sampling(stan_model_poisson_hv_comp, data = stan_data, iter = n_sims, chains = 4,
@@ -750,13 +750,13 @@ stan_fit_poisson_hv <- sampling(stan_model_poisson_hv_comp, data = stan_data, it
                                 )
 ```
 
-```{r analyze Stan Poisson Home Vector model}
+```{r __analyze Stan Poisson Home Vector model}
 print(stan_fit_poisson_hv, pars = c("team_skill", "home_court_advantage"))
 ```
 
 We see quite a different story from earlier - here there seems to be a much clearer variation in home court advantage for different teams. In the worst case this is worth less than two points and in the best case this is worth more than 4.5 points. Maybe the reason this wasn't obvious with the score difference model is that teams may play at a different pace at home or on the road. As a result they may score more points but the opponents as well. We'll keep this in mind for potential model expansion later.
 
-```{r posterior predictive check Poisson Home Vector model}
+```{r __posterior predictive check Poisson Home Vector model}
 y_rep_poisson_hv <- as.matrix(stan_fit_poisson_hv, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
 
 ppc_dens_overlay(y = game_data$pts_away, yrep = y_rep_poisson_hv[1:400, 1:N_games])
@@ -766,7 +766,7 @@ ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_poisson_hv[1:400, (2 * N
 
 Now let's also fit a points per minute model, based on the home vector model. In this model the hidden "skill" parameter determines scoring ability per minute.
 
-```{r compile and fit Stan Poisson Minutes model, include = FALSE}
+```{r __compile and fit Stan Poisson Minutes model, include = FALSE}
 stan_model_pois_min <- stan_model(file = "Stan_models/NBA_model_poisson_minutes.stan")
 
 stan_fit_pois_min <- sampling(stan_model_pois_min, data = stan_data, iter = n_sims, chains = 4, 
@@ -785,13 +785,13 @@ stan_fit_pois_min <- sampling(stan_model_pois_min, data = stan_data, iter = n_si
                               )
 ```
 
-```{r analyze Stan Poisson Minutes model}
+```{r __analyze Stan Poisson Minutes model}
 print(stan_fit_pois_min, pars = c("team_skill", "home_court_advantage"))
 ```
 
 Convergence diagnostics look fine.
 
-```{r posterior predictive check Poisson Minutes model}
+```{r __posterior predictive check Poisson Minutes model}
 y_rep_pois_min <- as.matrix(stan_fit_pois_min, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
 
 ppc_dens_overlay(y = game_data$pts_away, yrep = y_rep_pois_min[1:400, 1:N_games])
@@ -803,7 +803,7 @@ Posterior predictive plots also look fine.
 
 Next, we'll build a model that accounts for offensive and defensive skill. Here we'll model the parameters on the log scale so that the sampler doesn't need arbitrary initial values. This comes with a major disadvantage though; the parameters are now multiplicative and less interpretable.
 
-```{r compile and fit Stan Poisson Offense Defense model, include = FALSE}
+```{r __compile and fit Stan Poisson Offense Defense model, include = FALSE}
 stan_model_pois_offdef <- stan_model(file = "Stan_models/NBA_model_poisson_offdef.stan")
 
 stan_fit_pois_offdef <- sampling(stan_model_pois_offdef, data = stan_data, iter = 2 * n_sims, chains = 4,
@@ -818,7 +818,7 @@ stan_fit_pois_offdef <- sampling(stan_model_pois_offdef, data = stan_data, iter 
                                 )
 ```
 
-```{r analyze Stan Poisson Offense Defense model}
+```{r __analyze Stan Poisson Offense Defense model}
 print(stan_fit_pois_offdef, pars = c("off_skill", "def_skill", "home_court_advantage"))
 
 check_hmc_diagnostics(stan_fit_pois_offdef)
@@ -826,7 +826,7 @@ check_hmc_diagnostics(stan_fit_pois_offdef)
 
 Convergence for the skill parameters is good, but effective sample size is a lot smaller. We see home court advantage be about half of what it was in previous models, which makes sense since it is counted double here. Here we can see that Utah is a great defensive team, and Golden State and Houston are great offensive teams. Still, we see many teams defend better than Golden State, so this probably is mainly a function of how fast a team plays. We could potentially still improve this model by adjusting for pace.
 
-```{r posterior predictive check Poisson Offense Defense model}
+```{r __posterior predictive check Poisson Offense Defense model}
 y_rep_pois_offdef <- as.matrix(stan_fit_pois_offdef, pars = c("away_score_rep", "home_score_rep", "score_difference_rep"))
 
 ppc_dens_overlay(y = game_data$pts_away, yrep = y_rep_pois_offdef[1:400, 1:N_games])
@@ -842,7 +842,7 @@ Predictive checks mostly seem fine, but we still see more density in the middle 
 So far we have only fit the model on the entire season at once. Another approach would be to allow the skill of the teams to vary over time. This makes it possible to estimate the form of a team at various moments in the season.
 
 
-```{r set up data for Stan time series modeling}
+```{r __set up data for Stan time series modeling}
 stan_data_ts <- list(
                     N_games = N_games,
                     N_teams = length(team_mapping_table$team_id),
@@ -862,7 +862,7 @@ n_sims_ts <- 10000
 
 First we'll revisit the simpler normal model for score differences with home court, but now we'll update our estimate of the teams' skill parameters after each game.
 
-```{r compile and fit Stan time-series normal model, include = FALSE}
+```{r __compile and fit Stan time-series normal model, include = FALSE}
 stan_model_norm_ts_comp <- stan_model(file = "Stan_models/NBA_model_normal_ts.stan")
 
 stan_fit_norm_ts <- sampling(stan_model_norm_ts_comp, data = stan_data_ts, iter = n_sims_ts,
@@ -870,19 +870,19 @@ stan_fit_norm_ts <- sampling(stan_model_norm_ts_comp, data = stan_data_ts, iter 
 ```
 
 
-```{r analyze Stan time-series normal model}
+```{r __analyze Stan time-series normal model}
 print(stan_fit_norm_ts, pars = c("home_court_advantage", "score_scale", "init_scale", "update_scale"))
 
 check_hmc_diagnostics(stan_fit_norm_ts)
 ```
 
-```{r further analyze Stan time-series normal model}
+```{r __further analyze Stan time-series normal model}
 # options(max.print = 99999)
 print(stan_fit_norm_ts, pars = "team_skill")
 # options(max.print = 1000)
 ```
 
-```{r posterior predictive check time-series normal model}
+```{r __posterior predictive check time-series normal model}
 y_rep_norm_ts <- as.matrix(stan_fit_norm_ts, pars = "score_difference_rep")
 
 ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_norm_ts[1:400, ])
@@ -893,7 +893,7 @@ The number of effective samples for update_scale is relatively low, but other th
 Now let's see how team skills evolve over time.
 
 
-```{r extract skill over time for normal model}
+```{r __extract skill over time for normal model}
 team_skill <- extract(stan_fit_norm_ts, pars = "team_skill", permuted = TRUE)
 team_skill <- team_skill[[1]]
 mean_skill <- apply(team_skill, c(2, 3), mean) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
@@ -902,7 +902,7 @@ upper_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.96)) %>% as.tibbl
 lower_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.04)) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
 ```
 
-```{r analyze skill over time for normal model}
+```{r __analyze skill over time for normal model}
 mean_skill <- mean_skill %>% gather(key = "game", value = "skill", -team_name) %>%
   mutate(game_number = as.numeric(substring(game, first = 2)))
 
@@ -936,7 +936,7 @@ Like before we'll use a Poisson distribution to model points scored by away and 
 THIS MODEL STILL NEEDS TO BE COMPLETED.
 
 
-```{r compile and fit Stan time-series Poisson model, include = FALSE}
+```{r __compile and fit Stan time-series Poisson model, include = FALSE}
 stan_model_pois_ts_comp <- stan_model(file = "Stan_models/NBA_model_pois_ts.stan")
 
 stan_fit_pois_ts <- sampling(stan_model_pois_ts_comp, data = stan_data_ts, iter = n_sims_ts,
@@ -944,26 +944,26 @@ stan_fit_pois_ts <- sampling(stan_model_pois_ts_comp, data = stan_data_ts, iter 
 ```
 
 
-```{r analyze Stan time-series Poisson model}
+```{r __analyze Stan time-series Poisson model}
 print(stan_fit_pois_ts, pars = c("home_court_advantage", "score_scale", "init_scale", "update_scale"))
 
 check_hmc_diagnostics(stan_fit_pois_ts)
 ```
 
-```{r further analyze Stan time-series Poisson model}
+```{r __further analyze Stan time-series Poisson model}
 # options(max.print = 99999)
 print(stan_fit_pois_ts, pars = "team_skill")
 # options(max.print = 1000)
 ```
 
-```{r posterior predictive check time-series Poisson model}
+```{r __posterior predictive check time-series Poisson model}
 y_rep_pois_ts <- as.matrix(stan_fit_pois_ts, pars = "score_difference_rep")
 
 ppc_dens_overlay(y = game_data$score_diff, yrep = y_rep_pois_ts[1:400, ])
 ```
 
 
-```{r extract skill over time for Poisson model}
+```{r __extract skill over time for Poisson model}
 team_skill <- extract(stan_fit_pois_ts, pars = "team_skill", permuted = TRUE)
 team_skill <- team_skill[[1]]
 mean_skill <- apply(team_skill, c(2, 3), mean) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
@@ -972,7 +972,7 @@ upper_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.96)) %>% as.tibbl
 lower_skill <- apply(team_skill, c(2, 3), quantile, probs = c(.04)) %>% as.tibble() %>% mutate(team_name = team_mapping_table$team_name)
 ```
 
-```{r analyze skill over time for Poisson model}
+```{r __analyze skill over time for Poisson model}
 mean_skill <- mean_skill %>% gather(key = "game", value = "skill", -team_name) %>%
   mutate(game_number = as.numeric(substring(game, first = 2)))
 
@@ -1009,7 +1009,7 @@ So far we have checked the models by seeing how well they re-create the original
 For now we'll just split the season into a training period and then a prediction period - can we predict the next couple of games after training the model?
 
 
-```{r additional data manipulation for predictions}
+```{r __additional data manipulation for predictions}
 # arbitrary split of the season
 
 N_games_played <- 200 # we'll fit the model on this many games
@@ -1038,13 +1038,13 @@ n_sims_pred <- 4000
 
 ```
 
-```{r compile and fit predictive normal model, include = FALSE}
+```{r __compile and fit predictive normal model, include = FALSE}
 stan_pred_normal_comp <- stan_model(file = "Stan_models/NBA_pred_normal.stan")
 
 stan_pred_normal_fit <- sampling(stan_pred_normal_comp, data = stan_data_pred, iter = n_sims_pred)
 ```
 
-```{r analyze output of predictive normal model}
+```{r __analyze output of predictive normal model}
 print(stan_pred_normal_fit, pars = c("score_difference_pred"))
 
 game_data_new %>% select(date, away_team, home_team, pts_away, pts_home, overtime, score_diff) %>% print(n = 10)
@@ -1070,13 +1070,13 @@ After training on 100 games and predicting 10 games, we see multiple games where
 
 The framework seems to work though, so now let's try to use some more sophisticated models for prediction.
 
-```{r compile and fit predictive normal home model, include = FALSE}
+```{r __compile and fit predictive normal home model, include = FALSE}
 stan_pred_normal_home_comp <- stan_model(file = "Stan_models/NBA_pred_normal_home.stan")
 
 stan_pred_normal_home_fit <- sampling(stan_pred_normal_home_comp, data = stan_data_pred, iter = n_sims_pred)
 ```
 
-```{r analyze output of predictive normal home model}
+```{r __analyze output of predictive normal home model}
 print(stan_pred_normal_home_fit, pars = c("score_difference_pred", "home_court_advantage"))
 
 game_data_new %>% select(date, away_team, home_team, pts_away, pts_home, overtime, score_diff) %>% print(n = 10)
@@ -1101,13 +1101,13 @@ print(prediction_quality)
 We still see quite a few extreme outcomes, so let's try to make predictions using a t model.
 
 
-```{r compile and fit predictive t home model, include = FALSE}
+```{r __compile and fit predictive t home model, include = FALSE}
 stan_pred_t_home_comp <- stan_model(file = "Stan_models/NBA_pred_t_home.stan")
 
 stan_pred_t_home_fit <- sampling(stan_pred_t_home_comp, data = stan_data_pred, iter = n_sims_pred)
 ```
 
-```{r analyze output of predictive t home model}
+```{r __analyze output of predictive t home model}
 print(stan_pred_t_home_fit, pars = c("deg_free", "score_difference_pred", "home_court_advantage"))
 
 game_data_new %>% select(date, away_team, home_team, pts_away, pts_home, overtime, score_diff) %>% print(n = 10)
