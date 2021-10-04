@@ -186,10 +186,10 @@ $$
 w_i \sim \mathrm{Bernoulli}(p_i) \\
 p_i = \mathrm{Logit^{-1}}({s_{1i} + h - s_{2i}}) \\
 s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
-h \sim \mathrm{N}(0, 1)
+h \sim \mathrm{N}(0.3, 0.2)
 $$
 
-where the new parameter $h$ denotes the average home-court advantage in the league.
+where the new parameter $h$ denotes the average home-court advantage in the league. We give it a $Normal(0.3, 0.2)$ prior to indicate that we expect the effect of playing at home to be modest and positive, without forcing a positive home-court advantage parameter.
 
 
 ```{r compile and fit logit homecourt model, include = FALSE}
@@ -203,7 +203,7 @@ fit_logit_homecourt <- sampling(logit_homecourt_stan, data = stan_data, iter = n
 print_stanfit_custom_name(fit_logit_homecourt, regpattern = "team_skill", replace_by = unique_teams, pars = c("team_skill", "home_court_advantage"))
 ```
 
-Here we see the new predicted skill values of the teams. We also see that playing at home boosts the skill of the home team by approximately 0.40 points, which means its odds ratio of winning are multiplied by about 1.5.
+Here we see the new predicted skill values of the teams. We also see that playing at home boosts the skill of the home team by approximately 0.40 points, which means its odds ratio of winning are multiplied by about 1.5 (i.e. when teams of equal skill play, the home team has about 3:2 odds, or a 60% probability of winning).
 
 
 ```{r posterior predictive check logit homecourt model}
@@ -218,8 +218,10 @@ $$
 w_i \sim \mathrm{Bernoulli}(p_i) \\
 p_i = \mathrm{Logit^{-1}}({s_{1i} + h_{1i} - s_{2i}}) \\
 s_{1i}, s_{2i} \sim \mathrm{N}(0, 1) \\
-\forall i: h_{1i} \sim \mathrm{N}(0, 1)
+\forall k: h_{k} \sim \mathrm{N}(0.3, 0.2)
 $$
+
+Here the parameter $h_{1i}$ represents the home-court effect of the home team in game $i$.
 
 
 ```{r compile and fit logit home vector model, include = FALSE}
@@ -234,7 +236,7 @@ print_stanfit_custom_name(fit_logit_home_vector, regpattern = "team_skill|home_c
                           pars = c("team_skill", "home_court_advantage"))
 ```
 
-Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings). This model seems to sample better, in the sense that effective sample size is much larger for all parameters than in the previous models.
+Here we can see the effect of our choice in priors: the variability of team skill is clearly greater than the variability in home-court effect. This makes sense; this means that the difference between good and bad teams is determined more by skill than by their home-court effect.
 
 
 ```{r posterior predictive check logit home vector model}
@@ -336,75 +338,81 @@ print(df)
 All three methods seem to give comparable results in terms of predicting the outcome of the next game. It seems the model without home-court advantage predicts slightly worse than the others.
 
 
-Below is an old section that will need to be cleaned up at some point.
 
 
 ```{r old section on comparing win probabilities, but NOT in a full Bayesian way}
-x <- summary(fit_base_part, pars = c("team_skill"))$summary[,1]
-skill_est_logit <- x
-
-game_win_prob_logit <- numeric(N_games - N_games_part)
-for (n in (N_games_part+1):N_games) {
-  game_win_prob_logit[n - N_games_part] <- inv_logit( skill_est_logit[game_data$home_team_id[n]] - skill_est_logit[game_data$away_team_id[n]])
-}
-
-quad_loss_logit <- compute_quadratic_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
-log_loss_logit <- compute_log_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
-
-
-x <- summary(fit_hca_part, pars = c("team_skill", "home_court_advantage"))$summary[,1]
-skill_est_hca <- x[1:30]
-hc_est_hca <- x[31]
-
-game_win_prob_hca <- numeric(N_games - N_games_part)
-for (n in (N_games_part+1):N_games) {
-  game_win_prob_hca[n - N_games_part] <- inv_logit( skill_est_hca[game_data$home_team_id[n]] + hc_est_hca - skill_est_hca[game_data$away_team_id[n]])
-}
-
-quad_loss_hca <- compute_quadratic_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
-log_loss_hca <- compute_log_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
-
-
-x <- summary(fit_hv_part, pars = c("team_skill", "home_court_advantage"))$summary[,1]
-skill_est_hv <- x[1:30]
-hc_est_hv <- x[31:60]
-
-game_win_prob_hv <- numeric(N_games - N_games_part)
-for (n in (N_games_part+1):N_games) {
-  game_win_prob_hv[n - N_games_part] <- inv_logit( skill_est_hv[game_data$home_team_id[n]] + hc_est_hv[game_data$home_team_id[n]] - skill_est_hv[game_data$away_team_id[n]])
-}
-
-quad_loss_hv <- compute_quadratic_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
-log_loss_hv <- compute_log_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
-
-
-game_win_pred_hca <- numeric(N_games - N_games_part)
-for (n in (N_games_part+1):N_games) {
-  game_win_pred_hca[n - N_games_part] <- (inv_logit( skill_est_hca[game_data$home_team_id[n]] + hc_est_hca - skill_est_hca[game_data$away_team_id[n]]) > 0.5 )
-}
-
-quad_loss_pred <- compute_quadratic_loss( game_win_pred_hca, game_data$home_win[(N_games_part+1):N_games] )
-log_loss_pred <- compute_log_loss( game_win_pred_hca, game_data$home_win[(N_games_part+1):N_games] )
-
-
-df <- data.frame(quad_loss = c(quad_loss_logit, quad_loss_hca, quad_loss_hv, quad_loss_pred), log_loss = c(log_loss_logit, log_loss_hca, log_loss_hv, log_loss_pred))
-
-print(df)
+# x <- summary(fit_base_part, pars = c("team_skill"))$summary[,1]
+# skill_est_logit <- x
+# 
+# game_win_prob_logit <- numeric(N_games - N_games_part)
+# for (n in (N_games_part+1):N_games) {
+#   game_win_prob_logit[n - N_games_part] <- inv_logit( skill_est_logit[game_data$home_team_id[n]] - skill_est_logit[game_data$away_team_id[n]])
+# }
+# 
+# quad_loss_logit <- compute_quadratic_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
+# log_loss_logit <- compute_log_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
+# 
+# 
+# x <- summary(fit_hca_part, pars = c("team_skill", "home_court_advantage"))$summary[,1]
+# skill_est_hca <- x[1:30]
+# hc_est_hca <- x[31]
+# 
+# game_win_prob_hca <- numeric(N_games - N_games_part)
+# for (n in (N_games_part+1):N_games) {
+#   game_win_prob_hca[n - N_games_part] <- inv_logit( skill_est_hca[game_data$home_team_id[n]] + hc_est_hca - skill_est_hca[game_data$away_team_id[n]])
+# }
+# 
+# quad_loss_hca <- compute_quadratic_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+# log_loss_hca <- compute_log_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+# 
+# 
+# x <- summary(fit_hv_part, pars = c("team_skill", "home_court_advantage"))$summary[,1]
+# skill_est_hv <- x[1:30]
+# hc_est_hv <- x[31:60]
+# 
+# game_win_prob_hv <- numeric(N_games - N_games_part)
+# for (n in (N_games_part+1):N_games) {
+#   game_win_prob_hv[n - N_games_part] <- inv_logit( skill_est_hv[game_data$home_team_id[n]] + hc_est_hv[game_data$home_team_id[n]] - skill_est_hv[game_data$away_team_id[n]])
+# }
+# 
+# quad_loss_hv <- compute_quadratic_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+# log_loss_hv <- compute_log_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+# 
+# 
+# game_win_pred_hca <- numeric(N_games - N_games_part)
+# for (n in (N_games_part+1):N_games) {
+#   game_win_pred_hca[n - N_games_part] <- (inv_logit( skill_est_hca[game_data$home_team_id[n]] + hc_est_hca - skill_est_hca[game_data$away_team_id[n]]) > 0.5 )
+# }
+# 
+# quad_loss_pred <- compute_quadratic_loss( game_win_pred_hca, game_data$home_win[(N_games_part+1):N_games] )
+# log_loss_pred <- compute_log_loss( game_win_pred_hca, game_data$home_win[(N_games_part+1):N_games] )
+# 
+# 
+# df <- data.frame(quad_loss = c(quad_loss_logit, quad_loss_hca, quad_loss_hv, quad_loss_pred), log_loss = c(log_loss_logit, log_loss_hca, log_loss_hv, log_loss_pred))
+# 
+# print(df)
 ```
 
-It seems the single team home-court advantage model does slightly better than the other two at predicting out-of-sample data. Still, the difference between the three models is pretty small.
-
-Also, we can see that converting probability forecasts into simple win / loss predictions does clearly worse than any of these models. It has a much higher quadratic loss, and its log loss is infinite, because the log loss penalizes a wrong prediction extremely (i.e. a single prediction of the home team winning while it actually loses leads to a loss of infinity).
 
 
 ## Modeling the season as a time series
 
-So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that re-estimates every team's skill after each game they play. In this case we will only expand on the simple home-court advantage model, as it predicts slightly better than the other two models.
+So far we've been modeling the team skills as a single unobserved variable. This doesn't take into account that a team's skill can change over the course of a season. For instance, a team might acquire a new player or lose one due to injury. We can take this into account by building a model that re-estimates every team's skill after each game they play. In this case we will only expand on the simple home-court advantage model, as it predicts slightly better than the base model and is slightly less complicated than the model with multiple home-court effects.
 
 
 
-EXPLAIN THE MODEL IN EQUATIONS HERE.
+$$
+w_i \sim \mathrm{Bernoulli}(p_i) \\
+p_i = \mathrm{Logit^{-1}}({s_{1ti} + h - s_{2ti}}) \\
+\mathrm{for \ any \ team}\ t: \\
+s_{t;1} \sim \mathrm{N}(0, r) \\
+\forall k \geq 2: s_{tk} \sim \mathrm{N}(s_{t;k-1}, u) \\
+h \sim \mathrm{N}(0.3, 0.2) \\
+r \sim \mathrm{N}(0, 1) \\
+u \sim \mathrm{N}(0, 1)
+$$
 
+This looks a bit more complicated than before, so let's figure out what this means. First of all, we now have a skill parameter for team $t$ that depends on 'time'; the skill estimate at any game of team $t$ depends on their skill estimate at their previous game and some update scale parameter $u$ which determines how much a team's skill can fluctuate from one game to the next. Furthermore, the initial skill estimates of the teams are now governed by a parameter $r$ which determines how far away teams can be initially. This means that now for *each team* we have 82 skill estimates, one for each game.
 
 
 ```{r setting up data for time-series model}

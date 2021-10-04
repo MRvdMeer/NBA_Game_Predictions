@@ -51,7 +51,7 @@ model {
   // priors
   init_scale ~ normal(0,1);
   update_scale ~ normal(0, 1);
-  home_court_advantage ~ normal(0, 1);
+  home_court_advantage ~ normal(0.3, 0.2);
   
   for (n in 1:N_teams) {
     team_skill_raw[n, :] ~ normal(0, 1);
