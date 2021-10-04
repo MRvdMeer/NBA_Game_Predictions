@@ -149,7 +149,7 @@ ppc_dens_overlay(y = game_data$home_win, yrep = y_rep_logit[1:400, ])
 ```
 
 
-Here we see that outcomes are less symmetric than in our assumptions - home teams tend to win more than away teams, all else being equal. This should not come as a big surprise, as the home team tends to have a small but noticable advantage in basketball. We'll keep this in mind when trying to improve our model.
+Here we see that outcomes are less symmetric than in our assumptions - home teams tend to win more than away teams, all else being equal. This should not come as a big surprise, as the home team tends to have a small but noticeable advantage in basketball. We'll keep this in mind when trying to improve our model.
 
 
 ### Interpreting parameter values
@@ -234,7 +234,7 @@ print_stanfit_custom_name(fit_logit_home_vector, regpattern = "team_skill|home_c
                           pars = c("team_skill", "home_court_advantage"))
 ```
 
-Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings). Interestingly, there are quite a few teams where home-court advantage is bigger than team skill, or even where team skill is negative and home-court advantage is positive. This model seems to sample better, in the sense that effective sample size is much larger for all parameters than in the previous models.
+Here we see there is quite some difference in home-court advantage. Some teams become a lot better at home, while for other teams it barely makes a difference (or even seems to hurt in the case of teams 22 and 26, the Orlando Magic and the Sacramento Kings). This model seems to sample better, in the sense that effective sample size is much larger for all parameters than in the previous models.
 
 
 ```{r posterior predictive check logit home vector model}
@@ -288,8 +288,8 @@ for (n in 1:N_games_unplayed) {
 
 games_not_played$home_win_prob_base <- home_win_prob_base
 
-quad_loss_logit <- compute_quadratic_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
-log_loss_logit <- compute_log_loss( game_win_prob_logit, game_data$home_win[(N_games_part+1):N_games] )
+quad_loss_logit <- compute_quadratic_loss( home_win_prob_base, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_logit <- compute_log_loss( home_win_prob_base, game_data$home_win[(N_games_part+1):N_games] )
 
 
 post <- extract(fit_hca_part, pars = c("team_skill", "home_court_advantage"), permuted = TRUE)
@@ -306,8 +306,8 @@ for (n in 1:N_games_unplayed) {
 
 games_not_played$home_win_prob_hca <- home_win_prob_hca
 
-quad_loss_hca <- compute_quadratic_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
-log_loss_hca <- compute_log_loss( game_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+quad_loss_hca <- compute_quadratic_loss( home_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_hca <- compute_log_loss( home_win_prob_hca, game_data$home_win[(N_games_part+1):N_games] )
 
 
 post <- extract(fit_hv_part, pars = c("team_skill", "home_court_advantage"), permuted = TRUE)
@@ -324,8 +324,8 @@ for (n in 1:N_games_unplayed) {
 
 games_not_played$home_win_prob_hv <- home_win_prob_hv
 
-quad_loss_hv <- compute_quadratic_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
-log_loss_hv <- compute_log_loss( game_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+quad_loss_hv <- compute_quadratic_loss( home_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
+log_loss_hv <- compute_log_loss( home_win_prob_hv, game_data$home_win[(N_games_part+1):N_games] )
 
 df <- data.frame(quad_loss = c(quad_loss_logit, quad_loss_hca, quad_loss_hv), log_loss = c(log_loss_logit, log_loss_hca, log_loss_hv))
 
@@ -333,7 +333,7 @@ print(df)
 
 ```
 
-All three methods seem to give comparable results in terms of predicting the outcome of the next game. It seems the model with a single home-court advantage parameter does slightly better.
+All three methods seem to give comparable results in terms of predicting the outcome of the next game. It seems the model without home-court advantage predicts slightly worse than the others.
 
 
 Below is an old section that will need to be cleaned up at some point.
