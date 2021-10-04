@@ -458,7 +458,9 @@ ranked_teams <- final_mean_skill %>% group_by(team_name) %>%
   summarize(mean_skill = round(mean(skill), 2),
             median_skill = round(median(skill), 2),
             max_skill = round(max(skill), 2),
-            min_skill = round(min(skill), 2)) %>%
+            min_skill = round(min(skill), 2),
+            initial_skill = round(dplyr::first(skill, order_by = game_number), 2),
+            final_skill = round(dplyr::last(skill, order_by = game_number), 2)) %>%
   arrange(desc(mean_skill))
  
 print(ranked_teams, n = 30, digits = 2)
