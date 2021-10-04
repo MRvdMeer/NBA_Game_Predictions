@@ -58,7 +58,6 @@ model {
   }
   
   // likelihood
-  #home_win ~ bernoulli_logit(skill_difference + rep_vector(home_court_advantage, N_games));
   home_win ~ bernoulli_logit(logit_prob_home_win);
 }
 
